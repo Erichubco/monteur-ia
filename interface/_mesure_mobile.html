@@ -1,0 +1,50 @@
+<!doctype html><meta charset="utf-8"><title>mesure</title>
+<style>html,body{margin:0;background:#333}iframe{border:0;display:block}</style>
+<iframe id="f" src="/" width="390" height="844"></iframe>
+<script>
+window.mesurer = (L, H) => new Promise(res => {
+  const f = document.getElementById('f');
+  f.width = L; f.height = H;
+  f.onload = null;
+  f.src = '/?t=' + Date.now();
+  f.onload = () => setTimeout(async () => {
+    const d = f.contentDocument, w = f.contentWindow;
+    await d.fonts.ready;
+    const lin = c => { c/=255; return c<=0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055,2.4); };
+    const LU = ([r,g,b]) => 0.2126*lin(r)+0.7152*lin(g)+0.0722*lin(b);
+    const ratio = (a,b) => { const [x,y]=[LU(a),LU(b)].sort((p,q)=>q-p); return (x+0.05)/(y+0.05); };
+    const rgb = s => { const m=(s||'').match(/[\d.]+/g); return m?m.slice(0,3).map(Number).concat(m[3]!==undefined?+m[3]:1):null; };
+    const fond = el => { let n=el; while(n&&n!==d.documentElement){const c=rgb(w.getComputedStyle(n).backgroundColor); if(c&&c[3]>0.5) return c.slice(0,3); n=n.parentElement;} return [17,17,17]; };
+    const vis = el => { const s=w.getComputedStyle(el); const r=el.getBoundingClientRect();
+      return s.display!=='none' && s.visibility!=='hidden' && r.width>0 && r.height>0; };
+    const deborde = [...d.querySelectorAll('*')].filter(el => vis(el) && el.getBoundingClientRect().right > w.innerWidth + 1)
+      .map(el => el.tagName.toLowerCase()+'.'+[...el.classList].join('.')+' @'+Math.round(el.getBoundingClientRect().right));
+    const cibles = [...d.querySelectorAll('button,select,a,[role=button],.zone,.puce,.rond,.oeil')].filter(vis)
+      .filter(el => { const r=el.getBoundingClientRect(); return r.width<44 || r.height<44; })
+      .map(el => (el.id||el.className||el.tagName)+' '+Math.round(el.getBoundingClientRect().width)+'x'+Math.round(el.getBoundingClientRect().height));
+    const champs = [...d.querySelectorAll('input,select,textarea')].filter(vis)
+      .filter(el => parseFloat(w.getComputedStyle(el).fontSize) < 16)
+      .map(el => (el.id||el.className)+' '+w.getComputedStyle(el).fontSize);
+    const faible = [];
+    d.querySelectorAll('*').forEach(el => {
+      if (!vis(el)) return;
+      const t = [...el.childNodes].filter(n=>n.nodeType===3&&n.textContent.trim()).length; if(!t) return;
+      const st = w.getComputedStyle(el); const fg = rgb(st.color); if(!fg||fg[3]<0.5) return;
+      const px = parseFloat(st.fontSize), grand = px>=24 || (+st.fontWeight>=700 && px>=18.66);
+      const c = ratio(fg.slice(0,3), fond(el));
+      if (c < (grand?3:4.5)) faible.push((el.className||el.tagName)+' '+c.toFixed(2));
+    });
+    const dem = d.querySelector('.demande'), cad = d.querySelector('.cadre');
+    res({vue: w.innerWidth, scrollWidth: d.documentElement.scrollWidth,
+         deborde_h: d.documentElement.scrollWidth > w.innerWidth + 1,
+         elements_qui_debordent: deborde.slice(0,8),
+         cibles_sous_44: cibles.length, detail_cibles: cibles.slice(0,6),
+         champs_sous_16px: champs.length, detail_champs: champs,
+         contraste_faible: faible.length, detail_contraste: faible.slice(0,6),
+         cadre: cad ? Math.round(cad.getBoundingClientRect().width)+'x'+Math.round(cad.getBoundingClientRect().height) : null,
+         barre_en_bas: dem ? w.getComputedStyle(dem).position === 'fixed' : null,
+         police: w.getComputedStyle(d.body).fontFamily.slice(0,30),
+         geist: d.fonts.check('600 14px Geist')});
+  }, 2200);
+});
+</script>

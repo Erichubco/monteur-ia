@@ -1,0 +1,56 @@
+# Ce depot publie du CODE. Rien d'autre.
+#
+# Le dossier de travail pese 934 Mo, dont 4 Mo de code. Le reste est
+# soit lourd, soit reconstructible, soit prive. Sans ce fichier, un
+# « git add . » publierait 493 Mo de rushes clients.
+
+# --- Prive : les videos et les projets de celui qui utilise l'outil ---
+rushes/*
+!rushes/.gitkeep
+recettes/*
+!recettes/.gitkeep
+sorties/*
+!sorties/.gitkeep
+sons_separes/*
+!sons_separes/.gitkeep
+voix/
+
+# --- Prive : ce que l'outil a entendu et rendu ---
+demandes.jsonl
+demandes.jsonl.*
+a_faire.jsonl
+A_AMELIORER.md
+*.log
+*.aiff
+*.wav
+*.mp4
+*.mov
+
+# Cette page embarque 2,3 Mo de vignettes en base64 tirees d'une
+# publicite cliente. C'est une maquette, pas une piece du produit.
+interface/bobine.html
+
+# --- Sauvegardes de travail : 65 fichiers, 4 Mo, l'historique est dans git ---
+*.avant_*
+*.bak
+*.bak2
+*.charte_banc
+
+# Notes de travail internes : l'etat du chantier, pas la documentation
+# du produit. Elles nomment des clients et des fichiers prives.
+RELAIS_*.md
+
+# --- Reconstructible ---
+venv/
+__pycache__/
+*.py[cod]
+.DS_Store
+
+# Le banc de langue tourne sur les rushes de la machine qui l'a ecrit.
+# Le montage fige DOIT pointer vers de vrais fichiers : avec des chemins
+# inventes, 3 reponses sur 1 774 changent, parce que la recherche de
+# bandeau lit vraiment le disque. Ces chemins nomment donc des rushes
+# clients, et ils restent locaux. L'outil `banc_langue.py`, lui, est
+# publie.
+outils/banc_langue.ref.json
+outils/banc_langue.bp.json

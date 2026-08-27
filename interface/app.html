@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bobine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+ --ground:#0A0C0F;--panel:#12161B;--panel2:#171C22;--line:#242B33;--line-hi:#333C47;
+ --ink:#E9EDF2;--dim:#7E8896;--dimmer:#525B67;--accent:#FFC93C;--accent-ink:#1A1400;
+ --preuve:#5DD39E;--marque:#FF7A6B;--neutre:#4E5A68;--danger:#FF6B6B;--r:3px;
+ --ui:"Barlow",system-ui,-apple-system,sans-serif;
+ --slate:"Barlow Condensed","Barlow",system-ui,sans-serif;
+ --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--ui);font-size:14px;
+ line-height:1.45;-webkit-font-smoothing:antialiased;overflow:hidden}
+.slate{font-family:var(--slate);text-transform:uppercase;letter-spacing:.09em;font-weight:600;
+ font-size:11px;color:var(--dim)}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+button,input,textarea,select{font-family:inherit;font-size:inherit;color:inherit;background:none;border:none}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-thumb{background:var(--line-hi);border-radius:9px}
+::-webkit-scrollbar-track{background:transparent}
+
+.app{display:flex;flex-direction:column;height:100vh}
+.bar{display:flex;align-items:center;gap:16px;padding:0 16px;height:50px;flex:0 0 50px;
+ border-bottom:1px solid var(--line);background:var(--panel)}
+.logo{font-family:var(--slate);text-transform:uppercase;letter-spacing:.16em;font-weight:600;
+ font-size:15px;color:var(--accent)}
+select.proj{background:var(--panel2);border:1px solid var(--line);border-radius:var(--r);
+ padding:5px 9px;max-width:280px}
+.stats{margin-left:auto;display:flex;gap:18px;align-items:center}
+.stat{text-align:right;min-width:52px}
+.stat .v{font-family:var(--mono);font-size:13px;display:block;line-height:1.2}
+.stat .k{font-family:var(--slate);text-transform:uppercase;letter-spacing:.08em;font-size:10px;
+ color:var(--dimmer)}
+.btn{border:1px solid var(--line-hi);border-radius:var(--r);padding:6px 12px;font-size:13px;
+ color:var(--dim);transition:border-color .12s,color .12s}
+.btn:hover{border-color:var(--accent);color:var(--ink)}
+.btn.plein{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.btn.plein:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.35;cursor:default;border-color:var(--line)}
+.pastille{width:7px;height:7px;border-radius:50%;background:var(--accent);display:none}
+.pastille.on{display:block}
+
+.grid{display:grid;grid-template-columns:288px minmax(0,1fr) 300px;gap:1px;background:var(--line);
+ flex:1;min-height:0}
+.col{background:var(--ground);display:flex;flex-direction:column;min-width:0;min-height:0}
+.tete{padding:9px 13px;border-bottom:1px solid var(--line);background:var(--panel);
+ display:flex;align-items:center;gap:8px;flex:0 0 auto}
+
+/* chat */
+.fil{flex:1;overflow-y:auto;padding:13px;display:flex;flex-direction:column;gap:11px}
+.msg .qui{font-family:var(--slate);text-transform:uppercase;letter-spacing:.09em;font-size:10px;
+ color:var(--dimmer);margin-bottom:3px}
+.msg.eric .bulle{background:var(--panel2);border:1px solid var(--line);padding:8px 11px;
+ border-radius:var(--r)}
+.msg.moi .bulle{border-left:2px solid var(--accent);padding:2px 0 2px 11px;color:var(--dim)}
+.msg.moi .bulle b{color:var(--ink);font-weight:500}
+.saisie{border-top:1px solid var(--line);background:var(--panel);padding:10px 12px;flex:0 0 auto}
+.saisie textarea{width:100%;background:var(--panel2);border:1px solid var(--line);
+ border-radius:var(--r);padding:8px 10px;resize:none;height:64px;color:var(--ink)}
+.saisie textarea::placeholder{color:var(--dimmer)}
+.saisie .sous{display:flex;align-items:center;gap:8px;margin-top:7px}
+.aide{font-size:11px;color:var(--dimmer)}
+
+/* lecteur */
+.visu{align-items:center;padding:14px;gap:10px;overflow-y:auto}
+.cadre{position:relative;background:#000;border:1px solid var(--line);border-radius:var(--r);
+ overflow:hidden;line-height:0}
+.cadre video{display:block;height:min(50vh,540px);width:auto;max-width:100%}
+.st-over{position:absolute;left:6%;right:6%;top:57%;text-align:center;pointer-events:none;
+ color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.9);font-size:14px;line-height:1.28;font-weight:500}
+.transport{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center}
+.pp{width:32px;height:32px;border:1px solid var(--line-hi);border-radius:50%;display:grid;
+ place-items:center;font-size:11px}
+.pp:hover{border-color:var(--accent);color:var(--accent)}
+.tc{font-family:var(--mono);font-size:12px;color:var(--dim)}
+.tc b{color:var(--ink);font-weight:500}
+.vide-etat{text-align:center;color:var(--dimmer);padding:40px 20px;max-width:420px}
+.vide-etat h2{font-family:var(--slate);text-transform:uppercase;letter-spacing:.1em;font-size:15px;
+ color:var(--dim);margin:0 0 8px}
+
+/* inspecteur */
+.insp{padding:13px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.champ .k{font-family:var(--slate);text-transform:uppercase;letter-spacing:.09em;font-size:10px;
+ color:var(--dimmer);display:block;margin-bottom:3px}
+.champ .v{font-size:13px}
+.champ input[type=text],.champ textarea,.champ select{width:100%;background:var(--panel2);
+ border:1px solid var(--line);border-radius:var(--r);padding:6px 9px;color:var(--ink)}
+.champ textarea{resize:vertical;min-height:52px}
+.pastille-role{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;
+ font-family:var(--slate);text-transform:uppercase;letter-spacing:.07em;border:1px solid currentColor}
+.duree-ligne{display:flex;align-items:center;gap:6px}
+.duree-ligne .val{font-family:var(--mono);flex:1;text-align:center;background:var(--panel2);
+ border:1px solid var(--line);border-radius:var(--r);padding:5px}
+.pas{width:30px;height:30px;border:1px solid var(--line);border-radius:var(--r);color:var(--dim)}
+.pas:hover{border-color:var(--accent);color:var(--ink)}
+.note{font-size:12px;color:var(--dim);border-top:1px solid var(--line);padding-top:9px}
+.sup{color:var(--danger);border-color:rgba(255,107,107,.35)}
+.sup:hover{border-color:var(--danger);color:var(--danger)}
+
+/* frise */
+.frise{border-top:1px solid var(--line);background:var(--panel);padding:9px 14px 12px;flex:0 0 auto}
+.frise-tete{display:flex;align-items:center;gap:12px;margin-bottom:7px}
+.legende{margin-left:auto;display:flex;gap:12px}
+.lg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--dimmer)}
+.lg i{width:9px;height:9px;border-radius:2px;display:block}
+.beats{display:flex;gap:2px;margin-bottom:3px}
+.beat{padding:2px 6px;border-radius:2px 2px 0 0;background:var(--panel2);border:1px solid var(--line);
+ border-bottom:none;overflow:hidden;white-space:nowrap;font-family:var(--slate);
+ text-transform:uppercase;letter-spacing:.07em;font-size:10px;color:var(--dim);min-width:0}
+.pistes{display:flex;gap:2px;align-items:stretch;min-height:78px}
+.bloc{position:relative;border:1px solid var(--line);border-radius:2px;overflow:hidden;
+ background:var(--panel2);cursor:pointer;min-width:16px;height:78px;transition:border-color .1s}
+.bloc img{width:100%;height:54px;object-fit:cover;display:block;opacity:.7;pointer-events:none}
+.bloc:hover img{opacity:1}
+.bloc.sel{border-color:var(--accent)}
+.bloc.sel img{opacity:1}
+.bloc.glisse{opacity:.35}
+.bloc.cible{border-color:var(--accent);border-style:dashed}
+.bloc .bas{height:22px;display:flex;align-items:center;justify-content:center;
+ font-family:var(--mono);font-size:9px;color:var(--dim);pointer-events:none}
+.bloc .jauge{position:absolute;left:0;right:0;bottom:0;height:2px;pointer-events:none}
+.poignee{position:absolute;top:0;right:0;width:7px;height:54px;cursor:col-resize;
+ background:linear-gradient(90deg,transparent,rgba(255,201,60,.5))}
+.poignee:hover{background:var(--accent)}
+.vide{padding:22px;text-align:center;color:var(--dimmer);font-size:12px;width:100%}
+
+/* journal de tache */
+.tache{position:fixed;right:14px;bottom:14px;width:330px;background:var(--panel);
+ border:1px solid var(--line-hi);border-radius:var(--r);padding:11px 13px;display:none;z-index:50;
+ box-shadow:0 8px 28px rgba(0,0,0,.5)}
+.tache.on{display:block}
+.tache pre{font-family:var(--mono);font-size:11px;color:var(--dim);margin:6px 0 0;max-height:110px;
+ overflow-y:auto;white-space:pre-wrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (max-width:1180px){.grid{grid-template-columns:250px minmax(0,1fr) 260px}}
+.ecarts{margin-top:8px;display:flex;flex-direction:column;gap:6px}
+.ecart{display:flex;gap:8px;align-items:flex-start;font-size:12px;line-height:1.45;
+ padding:7px 9px;border-radius:7px;background:rgba(255,193,7,.07);
+ border-left:2px solid rgba(255,193,7,.55)}
+.ecart .tag{flex:0 0 auto;font-size:10px;letter-spacing:.06em;text-transform:uppercase;
+ font-weight:700;color:#ffc107;padding-top:1px}
+</style></head><body>
+
+<div class="app">
+ <header class="bar">
+  <div class="logo">Bobine</div>
+  <select class="proj" id="proj"></select>
+  <button class="btn" id="analyser">Analyser un rush</button>
+  <span class="pastille" id="modif" title="modifications non enregistrées"></span>
+  <div class="stats">
+   <div class="stat"><span class="v" id="s-plans">—</span><span class="k">plans</span></div>
+   <div class="stat"><span class="v" id="s-duree">—</span><span class="k">durée</span></div>
+   <div class="stat"><span class="v" id="s-asl">—</span><span class="k">plan moyen</span></div>
+   <button class="btn" id="annuler">Annuler</button>
+   <button class="btn" id="enreg">Enregistrer</button>
+   <button class="btn plein" id="rendre">Rendre le mp4</button>
+  </div>
+ </header>
+
+ <div class="grid">
+  <aside class="col">
+   <div class="tete"><span class="slate">Dis ce que tu veux changer</span></div>
+   <div class="fil" id="fil"></div>
+   <div class="saisie">
+    <textarea id="cmd" placeholder="raccourcis le hook à 2 secondes&#10;vire le plan 12&#10;mets les sous-titres en jaune"></textarea>
+    <div class="sous"><button class="btn plein" id="envoyer">Envoyer</button>
+     <span class="aide">⌘↵ pour envoyer · arrive dans Claude Code</span></div>
+   </div>
+  </aside>
+
+  <main class="col visu" id="visu">
+   <div class="cadre" id="cadre"><video id="v" playsinline preload="metadata"></video>
+    <div class="st-over" id="st-over"></div></div>
+   <div class="transport">
+    <button class="pp" id="pp" aria-label="Lecture">▶</button>
+    <div class="tc">plan <b id="tc-n">—</b> · source <b id="tc-src">0.00</b>s · montage <b id="tc-mtg">0.00</b>s</div>
+   </div>
+   <div class="aide">espace lecture · ← → plan précédent/suivant · suppr. retire le plan</div>
+  </main>
+
+  <aside class="col">
+   <div class="tete"><span class="slate">Plan sélectionné</span></div>
+   <div class="insp" id="insp"><div class="vide">aucun projet chargé</div></div>
+  </aside>
+ </div>
+
+ <footer class="frise">
+  <div class="frise-tete"><span class="slate">Frise · largeur = durée · glisser pour réordonner</span>
+   <div class="legende">
+    <span class="lg"><i style="background:var(--marque)"></i>court, on retient</span>
+    <span class="lg"><i style="background:var(--neutre)"></i>courant</span>
+    <span class="lg"><i style="background:var(--preuve)"></i>long, on croit</span>
+   </div></div>
+  <div class="beats" id="beats"></div>
+  <div class="pistes" id="pistes"><div class="vide">charge un projet</div></div>
+ </footer>
+</div>
+
+<div class="tache" id="tache"><div class="slate" id="tache-titre">Tâche</div><pre id="tache-log"></pre></div>
+
+<script>
+const $=s=>document.querySelector(s), f2=n=>(+n).toFixed(2);
+let ETAT={}, BP=null, NOM=null, sel=null, pile=[], sale=false, chemin=null;
+
+async function jget(u){const r=await fetch(u);if(!r.ok)throw new Error((await r.json()).erreur||r.status);return r.json()}
+async function jpost(u,d){const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},
+ body:JSON.stringify(d)});return r.json()}
+
+function dire(qui,txt){const d=document.createElement('div');d.className='msg '+qui;
+ d.innerHTML=`<div class="qui">${qui==='eric'?'Toi':'Bobine'}</div><div class="bulle">${txt}</div>`;
+ $('#fil').appendChild(d);$('#fil').scrollTop=$('#fil').scrollHeight}
+
+function duree(){return BP?BP.plans.reduce((s,p)=>s+p.duree,0):0}
+function couleur(d){const m=duree()/BP.plans.length;
+ return d<m*.55?'var(--marque)':d>m*1.55?'var(--preuve)':'var(--neutre)'}
+function debutDe(p){return p.src_debut!==undefined?p.src_debut:p.debut}
+function marquer(){sale=true;$('#modif').classList.add('on')}
+function memo(){pile.push(JSON.stringify(BP.plans));if(pile.length>60)pile.shift()}
+
+/* ------------------------------------------------ chargement */
+async function charger(nom){
+ BP=await jget('/api/projet/'+encodeURIComponent(nom)); NOM=nom; pile=[]; sale=false;
+ $('#modif').classList.remove('on');
+ const r=(ETAT.rushes||[]).find(x=>x.nom===nom);
+ chemin=r?r.chemin:null;
+ if(!chemin&&BP.chemin){const i=BP.chemin.indexOf('monteur-ia/');chemin=i>=0?BP.chemin.slice(i+11):null}
+ $('#v').src=chemin?('/media?f='+encodeURIComponent(chemin)):'';
+ $('#fil').innerHTML='';
+ const a=BP.audio||{},t=BP.transcript||{};
+ dire('moi',`<b>${BP.plans.length} plans</b>, ${f2(duree())}s, plan moyen ${f2(duree()/BP.plans.length)}s.`+
+  (a.part_active_pct!==undefined?` La parole couvre <b>${a.part_active_pct}%</b> du film`+
+  (t.mots_par_seconde?` à ${t.mots_par_seconde} mots/s`:'')+`, ${a.silences_sup_300ms} silence(s) de plus de 300 ms.`:''));
+ if(BP.gabarit) dire('moi',`Gabarit : ${BP.gabarit.nom}.`);
+ if(!BP.vision_remplie) dire('moi',`⚠ La vision n'est pas remplie sur ce projet : je connais le rythme mais pas ce qu'il y a dans l'image. Demande-moi de regarder la planche contact.`);
+ controler();
+ sel=BP.plans.length?BP.plans[0].n:null; dessiner(); if(sel)choisir(sel);
+}
+
+/* ------------------------------------------------ controle
+   Le controle ne bloque rien. Il dit ou le montage s'ecarte du winner et
+   pourquoi, avec le chiffre. A Eric de decider si l'ecart est une faute. */
+async function controler(){
+ try{
+  const r=await fetch('/api/controle/'+encodeURIComponent(NOM));
+  const d=await r.json();
+  if(d.erreur){dire('moi','Le controle n\'a pas pu tourner : '+d.erreur);return}
+  if(!d.ecarts.length){dire('moi','<b>Controle : rien a signaler.</b> Ce montage tient la grammaire du winner.');return}
+  dire('moi','<b>Controle : '+d.ecarts.length+' ecart'+(d.ecarts.length>1?'s':'')+'</b> — ce sont des ecarts mesures, pas des verdicts.'
+   +'<div class="ecarts">'+d.ecarts.map(e=>
+     '<div class="ecart"><span class="tag">'+e.tag+'</span>'+e.texte.replace(/</g,'&lt;')+'</div>').join('')+'</div>');
+ }catch(e){}
+}
+
+/* ------------------------------------------------ dessin */
+function dessiner(){
+ if(!BP){return}
+ const tot=duree();
+ $('#s-plans').textContent=BP.plans.length;
+ $('#s-duree').textContent=f2(tot)+'s';
+ $('#s-asl').textContent=BP.plans.length?f2(tot/BP.plans.length)+'s':'—';
+ const bt=(BP.gabarit&&BP.gabarit.beats)||[];
+ $('#beats').innerHTML=bt.map(b=>`<div class="beat" style="flex:${(b.a-b.de)||1}">${b.role}</div>`).join('');
+ let t=0;
+ $('#pistes').innerHTML=BP.plans.length?BP.plans.map(p=>{
+  const o=t;t+=p.duree;
+  const vig=`/media?f=${encodeURIComponent('recettes/'+NOM+'.plans/plan_'+String(p.n).padStart(2,'0')+'.jpg')}`;
+  const suj=(p.vision&&p.vision.sujet)||p.paroles||'';
+  return `<div class="bloc ${p.n===sel?'sel':''}" draggable="true" data-n="${p.n}" data-t="${o.toFixed(3)}"
+   title="plan ${p.n} · ${f2(p.duree)}s · ${suj.slice(0,90)}">
+   <img src="${vig}" alt="" loading="lazy">
+   <div class="bas">#${p.n} · ${f2(p.duree)}s</div>
+   <div class="jauge" style="background:${couleur(p.duree)}"></div>
+   <div class="poignee" data-poignee="${p.n}"></div></div>`}).join(''):'<div class="vide">timeline vide</div>';
+ brancherBlocs(); inspecteur();
+}
+
+function brancherBlocs(){
+ document.querySelectorAll('.bloc').forEach(b=>{
+  b.onclick=e=>{if(e.target.dataset.poignee)return;choisir(+b.dataset.n)};
+  b.ondragstart=e=>{if(e.target.dataset.poignee){e.preventDefault();return}
+   e.dataTransfer.setData('text/plain',b.dataset.n);b.classList.add('glisse')};
+  b.ondragend=()=>{b.classList.remove('glisse');document.querySelectorAll('.cible').forEach(x=>x.classList.remove('cible'))};
+  b.ondragover=e=>{e.preventDefault();b.classList.add('cible')};
+  b.ondragleave=()=>b.classList.remove('cible');
+  b.ondrop=e=>{e.preventDefault();b.classList.remove('cible');
+   const de=+e.dataTransfer.getData('text/plain'),vers=+b.dataset.n;
+   if(de===vers)return;
+   memo();
+   const i=BP.plans.findIndex(p=>p.n===de),j=BP.plans.findIndex(p=>p.n===vers);
+   const [x]=BP.plans.splice(i,1);BP.plans.splice(j,0,x);
+   marquer();dessiner();dire('moi',`Plan ${de} déplacé à la position ${j+1}.`)};
+ });
+ document.querySelectorAll('.poignee').forEach(h=>{
+  h.onmousedown=e=>{e.preventDefault();e.stopPropagation();
+   const n=+h.dataset.poignee,p=BP.plans.find(x=>x.n===n),d0=p.duree,x0=e.clientX;
+   const px=(h.closest('.bloc').offsetWidth)/Math.max(p.duree,.1);
+   memo();
+   const bouge=ev=>{p.duree=Math.max(.2,+(d0+(ev.clientX-x0)/px).toFixed(2));marquer();dessiner()};
+   const fin=()=>{document.removeEventListener('mousemove',bouge);document.removeEventListener('mouseup',fin);
+    dire('moi',`Plan ${n} : ${f2(d0)}s → <b>${f2(p.duree)}s</b>.`)};
+   document.addEventListener('mousemove',bouge);document.addEventListener('mouseup',fin)};
+ });
+}
+
+/* ------------------------------------------------ inspecteur */
+function positionDe(n){let t=0;for(const p of BP.plans){if(p.n===n)return t;t+=p.duree}return 0}
+
+function inspecteur(){
+ if(!BP||!BP.plans.length){$('#insp').innerHTML='<div class="vide">timeline vide</div>';return}
+ const p=BP.plans.find(x=>x.n===sel)||BP.plans[0];sel=p.n;
+ const v=p.vision||{};
+ $('#tc-n').textContent=p.n;
+ $('#tc-mtg').textContent=f2(positionDe(p.n));
+ $('#st-over').textContent=p.texte!==undefined?p.texte:(p.paroles||'');
+ $('#insp').innerHTML=`
+  <div class="champ"><span class="k">Rôle</span>
+   <span class="pastille-role" style="color:${couleur(p.duree)}">${v.role||'non renseigné'}</span></div>
+  <div class="champ"><span class="k">Durée</span>
+   <div class="duree-ligne">
+    <button class="pas" data-pas="-0.5">−½</button><button class="pas" data-pas="-0.1">−</button>
+    <span class="val">${f2(p.duree)}s</span>
+    <button class="pas" data-pas="0.1">+</button><button class="pas" data-pas="0.5">+½</button></div></div>
+  <div class="champ"><span class="k">Entre dans le rush à</span>
+   <span class="v mono">${f2(debutDe(p))}s</span></div>
+  <div class="champ"><span class="k">Sous-titre</span>
+   <textarea id="i-texte">${(p.texte!==undefined?p.texte:(p.paroles||'')).replace(/</g,'&lt;')}</textarea></div>
+  ${v.sujet?`<div class="champ"><span class="k">Ce qu'on voit</span><span class="v">${v.sujet}</span></div>`:''}
+  ${v.cadre?`<div class="champ"><span class="k">Cadre · caméra</span><span class="v">${v.cadre} · ${v.camera||'—'}</span></div>`:''}
+  <button class="btn sup" id="i-sup">Retirer ce plan</button>
+  ${v.note?`<div class="note">${v.note}</div>`:''}`;
+ $('#insp').querySelectorAll('.pas').forEach(b=>b.onclick=()=>{
+  memo();p.duree=Math.max(.2,+(p.duree+ +b.dataset.pas).toFixed(2));marquer();dessiner()});
+ $('#i-texte').onchange=e=>{memo();p.texte=e.target.value;marquer();$('#st-over').textContent=p.texte};
+ $('#i-sup').onclick=()=>retirer(p.n);
+}
+
+function retirer(n){
+ memo();const p=BP.plans.find(x=>x.n===n);BP.plans=BP.plans.filter(x=>x.n!==n);
+ if(sel===n)sel=BP.plans.length?BP.plans[0].n:null;
+ marquer();dessiner();dire('moi',`Plan ${n} retiré, <b>${f2(p.duree)}s</b> en moins. Total ${f2(duree())}s.`)}
+
+function choisir(n){
+ sel=n;const p=BP.plans.find(x=>x.n===n);if(!p)return;
+ try{$('#v').currentTime=debutDe(p)+.05}catch(e){}
+ document.querySelectorAll('.bloc').forEach(b=>b.classList.toggle('sel',+b.dataset.n===n));
+ inspecteur()}
+
+/* ------------------------------------------------ actions */
+$('#annuler').onclick=()=>{const e=pile.pop();if(!e){dire('moi','Rien à annuler.');return}
+ BP.plans=JSON.parse(e);marquer();dessiner();dire('moi','Annulé.')};
+
+$('#enreg').onclick=async()=>{
+ if(!BP)return;
+ const r=await fetch('/api/projet/'+encodeURIComponent(NOM),{method:'PUT',
+  headers:{'Content-Type':'application/json'},body:JSON.stringify(BP)});
+ if(r.ok){sale=false;$('#modif').classList.remove('on');dire('moi','Enregistré. Une copie de l\\'état précédent est gardée dans recettes/historique.')}
+ else dire('moi','L\\'enregistrement a échoué.')};
+
+$('#rendre').onclick=async()=>{
+ if(!BP)return;
+ if(sale){dire('moi','Enregistre d\\'abord, le rendu lit le fichier sur le disque.');return}
+ const {tache}=await jpost('/api/rendre',{projet:NOM,brouillon:true});
+ suivre(tache,'Rendu',r=>{if(r&&r.video){$('#v').src='/media?f='+encodeURIComponent(r.video);
+  dire('moi','Rendu terminé, le lecteur montre le montage.')}})};
+
+$('#analyser').onclick=async()=>{
+ const dispo=(ETAT.rushes||[]).filter(r=>!r.analyse);
+ if(!dispo.length){dire('moi','Tous les rushes sont déjà analysés. Dépose un mp4 dans rushes/.');return}
+ const r=dispo[0];
+ dire('moi',`J'analyse <b>${r.nom}</b> (${r.poids_mo} Mo). Détection des coupes, planche contact, audio, transcript.`);
+ const {tache}=await jpost('/api/analyser',{chemin:r.chemin});
+ suivre(tache,'Analyse '+r.nom,async()=>{await rafraichir();await charger(r.nom)})};
+
+async function suivre(cle,titre,fini){
+ $('#tache').classList.add('on');$('#tache-titre').textContent=titre;
+ const boucle=setInterval(async()=>{
+  const t=await jget('/api/tache/'+cle);
+  $('#tache-log').textContent=(t.lignes||[]).slice(-8).join('\\n');
+  if(t.etat==='fini'||t.etat==='echec'){clearInterval(boucle);
+   setTimeout(()=>$('#tache').classList.remove('on'),1800);
+   if(t.etat==='echec')dire('moi',`<b>${titre} a échoué.</b> ${(t.lignes||[]).slice(-2).join(' ')}`);
+   else fini&&fini(t.resultat)}},700)}
+
+$('#envoyer').onclick=async()=>{
+ const t=$('#cmd').value.trim();if(!t)return;
+ dire('eric',t.replace(/</g,'&lt;'));
+ await jpost('/api/demande',{projet:NOM,texte:t});$('#cmd').value='';
+ dire('moi','Reçu. Je le traite dans Claude Code, puis recharge le projet ici.')};
+$('#cmd').onkeydown=e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey))$('#envoyer').click()};
+
+/* lecteur */
+$('#pp').onclick=()=>{const v=$('#v');if(v.paused){v.play();$('#pp').textContent='❚❚'}else{v.pause();$('#pp').textContent='▶'}};
+$('#v').addEventListener('timeupdate',()=>{
+ $('#tc-src').textContent=f2($('#v').currentTime);
+ if(!BP)return;
+ const c=BP.plans.find(p=>$('#v').currentTime>=debutDe(p)&&$('#v').currentTime<debutDe(p)+p.duree);
+ if(c&&c.n!==sel){sel=c.n;document.querySelectorAll('.bloc').forEach(b=>b.classList.toggle('sel',+b.dataset.n===sel));inspecteur()}});
+$('#v').addEventListener('ended',()=>$('#pp').textContent='▶');
+
+document.addEventListener('keydown',e=>{
+ if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;
+ if(!BP||!BP.plans.length)return;
+ const i=BP.plans.findIndex(p=>p.n===sel);
+ if(e.code==='Space'){e.preventDefault();$('#pp').click()}
+ else if(e.key==='ArrowRight'&&i<BP.plans.length-1)choisir(BP.plans[i+1].n);
+ else if(e.key==='ArrowLeft'&&i>0)choisir(BP.plans[i-1].n);
+ else if(e.key==='Backspace'||e.key==='Delete'){e.preventDefault();retirer(sel)}
+ else if((e.metaKey||e.ctrlKey)&&e.key==='z'){e.preventDefault();$('#annuler').click()}
+ else if((e.metaKey||e.ctrlKey)&&e.key==='s'){e.preventDefault();$('#enreg').click()}});
+
+window.onbeforeunload=()=>sale?'Des modifications ne sont pas enregistrées.':undefined;
+
+/* démarrage */
+async function rafraichir(){
+ ETAT=await jget('/api/etat');
+ const opts=[...ETAT.projets.map(p=>`<option value="${p.nom}">${p.nom} · ${p.n_plans} plans · ${p.duree}s</option>`)];
+ $('#proj').innerHTML=opts.length?opts.join(''):'<option value="">aucun projet analysé</option>';
+ const nonAnalyses=ETAT.rushes.filter(r=>!r.analyse).length;
+ $('#analyser').textContent=nonAnalyses?`Analyser un rush (${nonAnalyses})`:'Tous analysés';
+ $('#analyser').disabled=!nonAnalyses}
+$('#proj').onchange=e=>{if(e.target.value)charger(e.target.value)};
+
+(async()=>{await rafraichir();
+ if(ETAT.projets.length)await charger(ETAT.projets[0].nom);
+ else{$('#visu').innerHTML='<div class="vide-etat"><h2>Rien à monter pour l\\'instant</h2>'+
+  '<p>Dépose un mp4 dans <span class="mono">rushes/</span> puis clique « Analyser un rush ». '+
+  'Je lis les coupes, le son et la parole, et je te rends la frise.</p></div>'}})();
+</script></body></html>

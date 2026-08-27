@@ -1,0 +1,2702 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Monteur</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+/* Inter est servie par NOUS, plus par Google Fonts. Ce ne sont pas d'autres
+   fichiers : ce sont exactement ceux que le navigateur allait chercher, Inter
+   v20, sous-ensembles latin et latin-ext, licence OFL 1.1 (interface/polices/,
+   LICENCE_OFL_Inter.txt). Le rendu ne bouge pas d'un pixel, mais au telephone
+   sans reseau la page ne tombe plus sur la police du systeme.
+   Les trois graisses pointent le MEME fichier, qui est variable : c'est ce que
+   fait la feuille de Google, et c'est ce qui garde le 700 en gras synthetique,
+   comme aujourd'hui. Les sous-ensembles cyrillique, grec et vietnamien ne sont
+   pas repris : ils n'etaient deja jamais telecharges, la page est en francais.
+   Playfair Display a ete RETIREE : `--edito` n'etait appele nulle part, la
+   police se telechargeait a chaque ouverture pour n'afficher aucun caractere. */
+@font-face{font-family:'Inter';font-style:normal;font-weight:400;font-display:swap;
+  src:url('/police/Inter-latin.woff2') format('woff2');
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Inter';font-style:normal;font-weight:400;font-display:swap;
+  src:url('/police/Inter-latin-ext.woff2') format('woff2');
+  unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Inter';font-style:normal;font-weight:500;font-display:swap;
+  src:url('/police/Inter-latin.woff2') format('woff2');
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Inter';font-style:normal;font-weight:500;font-display:swap;
+  src:url('/police/Inter-latin-ext.woff2') format('woff2');
+  unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Inter';font-style:normal;font-weight:600;font-display:swap;
+  src:url('/police/Inter-latin.woff2') format('woff2');
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Inter';font-style:normal;font-weight:600;font-display:swap;
+  src:url('/police/Inter-latin-ext.woff2') format('woff2');
+  unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+
+:root{
+  --lime:#96ff1a; --wash:#d6ffa6; --forest:#083300; --mint:#e6ffc8;
+  --carbon:#0c0a09; --charcoal:#323232; --graphite:#292a2e; --onyx:#121212;
+  --slate:#4d4d51; --smoke:#626469; --ash:#444446;
+  --mist:#f2f1f0; --fog:#e6e6e7; --paper:#ffffff;
+  --ui:'Inter',ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --r-btn:10px; --r-card:16px; --r-pill:9999px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--ui); font-size:14px; color:var(--carbon);
+  background:var(--paper); letter-spacing:-.005em;
+  display:grid; grid-template-rows:auto 1fr auto; height:100vh; overflow:hidden;
+}
+button,select,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:none;background:none}
+h3{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--smoke)}
+
+/* ------------------------------------------------------------- le depot */
+/* Deposer une video etait le SEUL geste du montage qui n'existait que dans le
+   Finder. La cible est la page ENTIERE : viser une petite zone avec un fichier
+   au bout du curseur est le geste le plus rate de toutes les interfaces. */
+#depotVoile{
+  position:fixed; inset:0; z-index:60; display:none;
+  background:rgba(12,10,9,.82); backdrop-filter:blur(3px);
+  align-items:center; justify-content:center; padding:24px;
+}
+body.depose #depotVoile{display:flex}
+#depotVoile .boite{
+  border:2px dashed var(--lime); border-radius:var(--r-card);
+  padding:40px 48px; text-align:center; color:var(--paper);
+  background:rgba(255,255,255,.04); max-width:520px;
+}
+#depotVoile b{display:block;font-size:20px;margin-bottom:6px;letter-spacing:-.02em}
+#depotVoile span{color:var(--fog);font-size:13px;line-height:1.5}
+/* La barre d'avancement : un envoi de 800 Mo sans retour se lit comme un gel. */
+#envoi{
+  position:fixed; left:0; right:0; top:0; height:3px; z-index:70;
+  background:var(--fog); display:none;
+}
+body.envoie #envoi{display:block}
+#envoi i{display:block;height:100%;width:0;background:var(--lime);transition:width .2s}
+
+/* ------------------------------------------------------- la source, visible */
+/* « J'ai l'impression que je sais pas d'ou ca vient » : le fichier de depart
+   n'etait ecrit NULLE PART dans la page. On l'affiche en permanence, avec le
+   moyen d'en mettre un autre a cote. Une zone de depot qui n'apparait qu'en
+   glissant n'existe pas pour qui ne sait pas qu'elle est la. */
+.source{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:8px 16px;border-bottom:1px solid var(--fog);background:var(--mist);
+}
+.source .quoi{display:flex;align-items:baseline;gap:8px;min-width:0;flex:1 1 260px}
+.source .nom{
+  font-weight:600;letter-spacing:-.01em;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;
+}
+.source .fiche{color:var(--smoke);font-size:12px;white-space:nowrap}
+.source .zone{
+  display:flex;align-items:center;gap:8px;
+  border:1px dashed var(--slate);border-radius:var(--r-btn);
+  padding:6px 12px;color:var(--smoke);font-size:12px;cursor:pointer;
+  background:var(--paper);
+}
+.source .zone:hover{border-color:var(--carbon);color:var(--carbon)}
+.source .zone b{color:var(--carbon);font-weight:600}
+body.depose .source .zone{border-color:var(--forest);background:var(--mint)}
+
+/* Rien d'ouvert : la page ne doit pas etre une coquille muette. */
+.vide{
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  gap:14px;text-align:center;color:var(--fog);padding:32px;height:100%;
+}
+body.aucun .vide{display:flex}
+body.aucun .cadre, body.aucun .transport{display:none}
+.vide b{font-size:22px;color:var(--paper);letter-spacing:-.02em}
+.vide p{max-width:420px;line-height:1.55;font-size:13px}
+.vide button{
+  border:1px solid var(--lime);border-radius:var(--r-btn);
+  padding:12px 20px;background:var(--lime);color:var(--forest);font-weight:600;
+  min-height:44px;
+}
+
+/* ---------------------------------------------------------------- barre */
+.top{
+  display:flex;align-items:center;gap:12px;padding:8px 16px;
+  border-bottom:1px solid var(--fog);background:var(--paper);
+}
+.marque{font-weight:600;font-size:15px;letter-spacing:-.02em}
+.marque i{font-style:normal;color:var(--smoke);font-weight:400}
+.sep{width:1px;height:20px;background:var(--fog)}
+select.pill{
+  border:1px solid var(--fog);border-radius:var(--r-btn);padding:7px 10px;
+  background:var(--paper);font-size:13px;font-weight:500;max-width:280px;
+}
+.pousse{flex:1}
+.ghost{
+  border:1px solid var(--fog);border-radius:var(--r-btn);padding:8px 14px;
+  font-size:13px;font-weight:500;color:var(--charcoal);background:var(--paper);
+}
+.ghost:hover{background:var(--mist)}
+.lime{
+  background:var(--lime);border:1px solid var(--forest);color:var(--forest);
+  border-radius:var(--r-btn);padding:8px 16px;font-size:13px;font-weight:600;
+}
+.lime:hover{background:#8bf00f}
+.lime[disabled]{opacity:.45;cursor:default}
+
+/* -------------------------------------------------------------- colonnes */
+.grille{display:grid;grid-template-columns:1fr 420px;min-height:0;min-width:0;overflow:hidden}
+body.reglages .grille{grid-template-columns:1fr 420px 300px}
+/* Sous 900 px, la colonne de droite (le champ ou Eric ECRIT, les puces
+   « dynamiser » et « ce qui cloche ») sortait de l'ecran, et la barre du haut
+   poussait les boutons Apercu / Analyser / Annuler / Reglages / Rendre hors
+   du cadre. Une page dont on ne peut plus rien demander n'est plus la page.
+   On empile, et la barre du haut passe a la ligne. */
+@media (max-width:900px){
+  .grille, body.reglages .grille{grid-template-columns:1fr;grid-auto-rows:auto;
+    overflow-y:auto}
+  .haut, header{flex-wrap:wrap;row-gap:8px}
+  .apercu, .scene{max-width:100%}
+  .apercu video, .scene video, .apercu img{max-width:100%;height:auto}
+  .frise{overflow-x:auto}
+  /* le texte du fil debordait a droite, coupe en plein mot */
+  .fil, .fil *{overflow-wrap:anywhere;word-break:break-word}
+  .fil{padding:12px;min-height:34vh}
+  /* L'apercu DISPARAISSAIT : `.cadre` est en `height:100%` et sa colonne n'a
+     plus de hauteur definie une fois les rangees empilees, donc 100 % de rien
+     vaut rien. Mesure : 292x519 px a 1100, 13x23 a 820, 0x0 a 430.
+     La regle posee ici sur `.scene video` ne pouvait pas sauver la mise :
+     `.cadre video` est ecrit plus bas, a specificite egale, et gagnait.
+     On donne donc au CADRE une hauteur reelle, et la largeur suit le format.
+     Le min() garde le portrait entier a l'ecran meme sur un telephone.
+     Et le prefixe `body` n'est pas une coquetterie : une media-query n'ajoute
+     AUCUNE specificite. `.cadre{height:100%}` est ecrit 100 lignes plus bas,
+     a specificite egale, et gagnait en silence — la regle posee ici semblait
+     juste et ne s'appliquait jamais. C'est la deuxieme fois dans ce fichier. */
+  body .scene{min-height:0;padding:14px}
+  /* flex:0 0 auto, sinon la colonne empilee comprime l'apercu a 221 px de
+     haut au lieu des 504 demandes : un enfant flex se laisse retrecir par
+     defaut, et une hauteur ecrite n'est qu'une SUGGESTION tant qu'on ne lui
+     retire pas ce droit. La colonne defile, c'est elle qui doit ceder. */
+  body .cadre{flex:0 0 auto;height:min(56vh, calc((100vw - 32px) * 16 / 9));
+    max-width:calc(100vw - 32px)}
+}
+body:not(.reglages) .droite{display:none}
+
+/* ======================================================== LE TELEPHONE ====
+   Deux seuils, pas un. 760 px decide du NOMBRE DE COLONNES ; `pointer:coarse`
+   decide de la TAILLE DES CIBLES, parce qu'une tablette de 1024 px tenue au
+   doigt garde ses colonnes mais exige des cibles au pouce. Un seuil unique
+   pose a 400 px attrape presque tous les telephones (l'iPhone le plus courant
+   fait 390 px) et laisse passer les 430.
+   Aucun `maximum-scale` : empecher de zoomer sur une page qu'on lit au
+   telephone, c'est la casser pour ceux qui en ont besoin. */
+
+/* --- 1. le doigt --------------------------------------------------------
+   La regle est ecrite DEUX FOIS, et ce n'est pas une maladresse. Mesure du
+   27/08 : `pointer:coarse` rend faux dans un Chrome pilote, meme en mode
+   telephone. Un reglage qui depend d'un signal qu'on ne peut pas prouver n'est
+   pas un reglage, c'est un pari : on l'accroche AUSSI a la largeur, qui elle
+   se mesure. `coarse` reste, pour les tablettes larges tenues au doigt. */
+@media (pointer:coarse), (max-width:760px){
+  /* 44 x 44 px : le seul chiffre ou Apple et le critere WCAG 2.5.5 tombent
+     d'accord par deux chemins independants. */
+  button, select, .zone, .puce, .rond, [role="button"]{min-height:44px}
+  .rond{width:44px;height:44px}
+  .bas button, .puces button{padding-left:14px;padding-right:14px}
+  /* QUATRIEME fois que la meme regle se paie dans ce fichier : une media-query
+     n'ajoute AUCUNE specificite. `.rond{width:30px}` est ecrit 150 lignes plus
+     bas, a specificite egale, et gagnait. Le bouton d'envoi restait a 30 px de
+     LARGE (sa hauteur, elle, obeissait, parce que `min-height` n'est ecrit
+     nulle part ailleurs) — donc la mesure disait 30x44 et la regle semblait
+     juste. Le prefixe `body` est ce qui la rend vraie. */
+  body .rond{width:44px;height:44px}
+  /* La lecture et le zoom de la frise : deux rangees de boutons a 34 et 26 px,
+     jamais reprises ici. Le zoom etait meme comprime a 19 px par le flex. */
+  body .transport button{width:44px;height:44px}
+  body .zoom button{width:44px;height:44px;flex:0 0 auto}
+  body .oeil{min-width:44px}      /* « SON » ne fait que 43 px de large */
+  /* Sous 16 px, Safari iOS ZOOME tout seul au focus, et la page reste zoomee.
+     Ce n'est pas un detail de gout, c'est la page qui part de travers des la
+     premiere frappe. */
+  /* Une media-query n'ajoute AUCUNE specificite : `.demande textarea` et
+     `select.pill` sont ecrits plus haut et gagnaient en silence. Mesure :
+     le champ de dictee restait a 15 px, le menu des projets a 13. On reprend
+     donc les MEMES selecteurs, pas des selecteurs de type. Troisieme fois que
+     ce piege se paie dans ce fichier. */
+  body textarea, body input, body select,
+  body .demande textarea, body select.pill, body #txtScript{font-size:16px}
+  /* Un etat qui n'existe qu'au survol n'existe pas au doigt. */
+  .plan .poignee{opacity:1}
+}
+
+/* --- 2. une seule colonne ---------------------------------------------- */
+@media (max-width:760px){
+  body{overflow:auto}
+  .top{padding:8px 12px;gap:8px}
+  .marque{font-size:14px}
+  .marque i{display:none}
+  /* Au telephone, les elements passent A LA LIGNE. Une bande qui defile
+     horizontalement cache ses boutons de bout : on ne sait pas qu'ils sont la. */
+  .top, .source, .bas, .puces{flex-wrap:wrap}
+  /* Un enfant de flexbox a `min-width:auto` : il refuse de descendre sous la
+     largeur de son contenu le plus long. Le menu des projets porte
+     « rush E — 64 plans, 82,78 s » et poussait la page a 436 px de
+     large sur un ecran de 390. Mesure en cadre isole : `.top` a 436,
+     `#bRendre` a 424, la fiche de source a 399. Le `min-width:0` est ce qui
+     autorise l'ellipse a faire son travail. */
+  body .top > *, body .source > *, body .source .quoi > *{min-width:0}
+  body select.pill{max-width:100%;flex:1 1 140px;min-width:0;
+    text-overflow:ellipsis}
+  body .source .fiche{white-space:normal;overflow-wrap:anywhere}
+  body .bas > *{min-width:0}
+  /* Ce qui ne sert pas au telephone sort de l'ecran, il n'y a pas la place
+     pour tout : les reglages fins et l'apercu rapide se font au bureau. */
+  /* « Analyser » porte le nom de l'analyse mais lance le controle qualite :
+     au telephone, deux boutons qui se ressemblent et dont un ment, c'est un
+     de trop. Il reste au bureau. */
+  #bReglages, #bApercu, #infoProjet, #bAnalyser{display:none}
+  #bRendre{flex:0 1 auto}
+  .marque{flex:1 1 auto}
+
+  .source{padding:10px 12px;gap:10px}
+  .source .quoi{flex:1 1 100%}
+  .source .fiche{white-space:normal}
+  .source .zone{flex:1 1 100%;justify-content:center;padding:12px}
+  .source .zone .surGrand{display:none}   /* on ne glisse pas au doigt */
+
+  /* L'image d'abord, la conversation ensuite : au telephone on regarde,
+     puis on parle. */
+  /* `1fr` vaut `minmax(auto, 1fr)`, et ce `auto` refuse de descendre sous le
+     contenu : le corps de la page est LUI-MEME une grille, donc un seul enfant
+     trop large etirait TOUTES les rangees. Mesure : chaque bloc a 436 px sur un
+     ecran de 390, et aucun n'avait de `min-width`. C'est la meme regle que pour
+     flexbox, une ligne plus haut, et elle se paie deux fois. */
+  /* Le corps est une grille `auto 1fr auto`. Empile au telephone, cette
+     rangee `1fr` ne vaut plus que la place qui RESTE, soit presque rien : la
+     scene etait ecrasee a 180 px et l'apercu debordait par-dessus la
+     conversation. On rend toutes les rangees automatiques, et c'est la PAGE
+     qui defile. */
+  body{grid-template-columns:minmax(0,1fr);
+       grid-template-rows:auto;grid-auto-rows:auto;height:auto;min-height:100%}
+  body .scene, body .gauche, body .grille{height:auto;min-height:0}
+  .grille, body.reglages .grille{grid-template-columns:minmax(0,1fr)}
+  body > *{min-width:0}
+  .scene{order:1} .gauche{order:2} .frise{order:3}
+  /* Ce qui doit tenir au-dessus de la barre de dictee, ce n'est pas l'apercu :
+     c'est l'apercu ET la rangee de lecture. A 46vh, mesure a 390 x 844, le
+     bouton lecture tombait de 636 a 680 px et la barre commencait a 642 : le
+     seul bouton qui met le film en marche etait a moitie sous elle.
+     40vh, et la scene se resserre de 14 px pour les rendre. */
+  body .scene{padding:10px;gap:10px}
+  body .cadre{flex:0 0 auto;
+    height:min(40vh, calc((100vw - 20px) * 16 / 9));
+    max-width:calc(100vw - 20px)}
+  .fil{min-height:0;max-height:38vh}
+  .demande{padding:10px 12px}
+  .aide.mode{display:none}     /* 119 mots de mode d'emploi, lus une fois */
+
+  /* La barre de commande prenait la moitie de l'ecran : dix boutons qui
+     passaient a la ligne sur quatre rangees, plus le champ. Au telephone on
+     garde les trois gestes du montage vocal, parler, envoyer, et le seul
+     raccourci qui vaut le detour. Le reste se dit, justement. */
+  body .bas #bRegarder, body .bas #bScript, body .bas #bVeille,
+  body .bas #bVoixOff, body .bas .puce[data-ex="masque les sous-titres"],
+  body .bas .puce[data-ex="raccourcis le hook à 1,3 s"]{display:none}
+  body .bas{gap:8px;align-items:center}
+  body .bas .puce{flex:1 1 auto}
+  body .rond.micro{width:56px;height:56px;font-size:20px;order:-1}
+  body .demande textarea{min-height:52px;max-height:22vh}
+  /* La rangee de la frise : cinq boutons plus une legende sur une seule
+     ligne. Mesure a 390 : la rangee finissait a 410 px et `.frise` la coupait
+     — les boutons de bout n'etaient pas hors ecran, ils etaient INVISIBLES.
+     On passe a la ligne, et les deux boutons qui n'ont pas de sens au doigt
+     sortent : couper se DIT, et les raccourcis clavier n'ont pas de clavier. */
+  .frise .entete{flex-wrap:wrap;row-gap:8px}
+  .frise .zoom{margin-left:0;width:100%;justify-content:flex-end;gap:8px}
+  .frise .legende{flex:1 1 100%;font-size:10.5px}
+  #bCouper, #bAide{display:none}
+
+  /* La frise passe SOUS le pli : au doigt elle ne sert pas a choisir un plan,
+     un plan de 0,4 s y fait 4 px. Aucun des produits etudies ne propose de
+     montage a la frise sur telephone ; deux d'entre eux l'ont retiree. */
+  body .frise{max-height:150px}
+
+  /* La frise ne sert PAS a choisir un plan au doigt : a cette echelle un plan
+     de 0,4 s fait 4 px de large, personne ne peut le viser. Elle reste la pour
+     LIRE le montage, et le choix passe par la liste, a 56 px la ligne.
+     C'est l'exception « equivalent » du critere WCAG 2.5.8, mot pour mot. */
+  .frise{max-height:170px;overflow:auto}
+  .pistes{touch-action:pan-x pan-y}
+
+  /* Le pouce est en BAS. La barre de dictee y reste collee, toujours
+     atteignable, sans que la page ait a defiler jusqu'a elle.
+     `sticky` ne pouvait PAS marcher ici : le conteneur qui defile est
+     `.grille`, et `.demande` est deux niveaux plus bas dans une colonne aussi
+     haute que son contenu, donc sans marge ou coller. Mesure : la barre
+     tombait a 1 800 px du haut. `fixed` ne depend d'aucun ancetre.
+     `safe-area-inset-bottom` : sinon la barre d'accueil de l'iPhone mange le
+     bouton de dictee. */
+  body .demande{position:fixed;left:0;right:0;bottom:0;z-index:30;
+    background:var(--paper);border-top:1px solid var(--fog);
+    padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+  /* Mesure : la barre fait 202 px de haut, pas 170. Les 32 px manquants,
+     c'est le bas de la conversation qu'on ne peut pas atteindre. */
+  body .grille{padding-bottom:216px}
+  #depotVoile{display:none !important}   /* pas de glisser deposer au doigt */
+}
+
+/* --- 3. les tres petits ecrans ----------------------------------------- */
+@media (max-width:400px){
+  .top{gap:6px}
+  /* `:not(.rond)` n'est pas une precaution : sans lui, le bouton d'envoi et le
+     micro heritaient de `flex:1 1 calc(50% - 6px)` et s'etiraient sur la
+     moitie de la largeur. Un `border-radius:50%` sur un bouton de 218 px de
+     large ne fait pas un rond, il fait une ELLIPSE. */
+  .bas button:not(.rond){flex:1 1 calc(50% - 6px)}
+}
+.col{padding:16px;overflow-y:auto;overflow-x:hidden;min-width:0;
+  display:flex;flex-direction:column;gap:16px}
+.gauche{border-left:1px solid var(--fog);padding:0;gap:0}
+.droite{border-left:1px solid var(--fog)}
+
+/* ------------------------------------------------------- champ de demande */
+.fil{flex:1;overflow-y:auto;display:flex;flex-direction:column-reverse;gap:14px;padding:16px}
+.pied{border-top:1px solid var(--fog);padding:14px 16px}
+.demande{border:1px solid var(--fog);border-radius:var(--r-card);padding:14px}
+.demande:focus-within{border-color:var(--slate)}
+.demande textarea{
+  width:100%;border:none;outline:none;resize:none;font-size:15px;line-height:1.45;
+  min-height:82px;background:transparent;
+}
+.demande textarea::placeholder{color:var(--smoke)}
+/* La rangee de puces DOIT pouvoir passer a la ligne. Sans `wrap`, chaque puce
+   ajoutee elargissait la colonne, et a 1440 px le bouton d'envoi sortait de
+   l'ecran. Un enfant de grille a min-width:auto : il pousse au lieu de plier. */
+.demande .bas{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px}
+.demande .bas .rond:first-of-type{margin-left:auto}
+.puce{
+  border:1px solid var(--fog);border-radius:var(--r-btn);padding:5px 9px;
+  font-size:12px;font-weight:500;color:var(--charcoal);
+}
+.puce:hover{background:var(--mint);border-color:var(--wash)}
+.chant{margin:6px 0 0;padding-left:18px}
+.chant li{margin:0 0 6px;line-height:1.35}
+.rond{
+  width:30px;height:30px;border-radius:var(--r-pill);
+  background:var(--lime);color:var(--forest);font-weight:600;font-size:15px;
+  display:grid;place-items:center;border:1px solid var(--forest);
+}
+/* Le micro. Au repos il est discret : c'est un outil, pas une decoration.
+   En parole il est le seul point rouge de la page, donc impossible a rater. */
+.rond.micro{background:var(--paper);color:var(--slate);
+  border-color:var(--fog);font-size:11px;width:auto;min-width:30px;padding:0 9px}
+.rond.micro:hover{border-color:var(--slate);color:var(--carbon)}
+#bVoixOff.parle,#bVoixOff.pense{background:#c0261f;color:#fff;border-color:#c0261f}
+.rond.micro.parle{background:#c0261f;color:#fff;border-color:#c0261f;
+  font-variant-numeric:tabular-nums;animation:pouls 1.1s ease-in-out infinite}
+.rond.micro.pense{background:var(--mist);color:var(--slate);border-color:var(--fog)}
+@keyframes pouls{50%{box-shadow:0 0 0 5px rgba(192,38,31,.16)}}
+@media (prefers-reduced-motion:reduce){.rond.micro.parle{animation:none}}
+.compte{display:flex;align-items:center;gap:8px;margin-top:7px;font-size:12px;
+  color:var(--slate)}
+.compte b{font-variant-numeric:tabular-nums;color:var(--carbon)}
+.compte button{border:1px solid var(--fog);background:var(--paper);
+  border-radius:var(--r-pill);padding:2px 10px;font-size:12px;color:var(--carbon)}
+.compte button:hover{border-color:var(--slate)}
+/* La voie qui a repondu se lit sur la reponse : les regles sont gratuites,
+   Claude Code est paye. Eric doit voir lequel a travaille, et ce qu'il coute. */
+.voie{margin-left:7px;font-size:10.5px;letter-spacing:.02em;text-transform:uppercase;
+  background:var(--wash);color:var(--forest);border-radius:var(--r-pill);padding:2px 8px}
+.msg .fin{color:var(--smoke);font-size:12px}
+#txtScript{width:100%;min-height:96px;resize:vertical;font:inherit;font-size:12.5px;
+  line-height:1.5;padding:9px 11px;border:1px solid var(--fog);border-radius:var(--r-btn);
+  background:var(--paper);color:var(--carbon)}
+#txtScript:focus{outline:none;border-color:var(--slate)}
+.ligne{display:flex;gap:7px;margin-top:8px}
+.puce.fort{background:var(--lime);border-color:var(--forest);color:var(--forest);font-weight:600}
+.aide.mode{margin:9px 2px 0;font-size:11.5px;line-height:1.55;color:var(--smoke)}
+.aide.mode b{color:var(--charcoal);font-weight:600}
+.msg{font-size:13.5px;line-height:1.5;color:var(--charcoal)}
+.msg b{color:var(--carbon);font-weight:600}
+.msg.moi{align-self:flex-end;max-width:85%;background:var(--mist);
+  border-radius:14px 14px 4px 14px;padding:9px 13px;color:var(--carbon)}
+.msg.fait{border-left:2px solid var(--lime);padding-left:11px}
+.msg.rien{border-left:2px solid #c26a00;padding-left:11px}
+.msg ul{margin:6px 0 0 0;padding-left:16px}
+.msg li{margin:2px 0}
+.attente{font-size:12px;color:var(--smoke);font-style:italic}
+.quand{font-size:11px;color:var(--smoke);font-variant-numeric:tabular-nums;margin-right:4px}
+.rushes{display:flex;flex-direction:column;gap:6px}
+.rush{display:flex;align-items:center;gap:8px;border:1px solid var(--fog);
+  border-radius:var(--r-btn);padding:7px 9px;font-size:12px}
+.rush span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rush em{font-style:normal;font-size:10.5px;color:var(--smoke)}
+.rush button{border:1px solid var(--forest);background:var(--lime);color:var(--forest);
+  border-radius:var(--r-btn);padding:4px 9px;font-size:11px;font-weight:600;white-space:nowrap}
+.rush button[disabled]{opacity:.45;cursor:default}
+.suite{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 9px}
+.suite:empty{display:none}
+.suite .quoi{font-size:10px;color:var(--smoke);letter-spacing:.06em;
+  text-transform:uppercase;font-weight:600}
+.suite button{border:1px solid var(--fog);background:var(--paper);
+  border-radius:var(--r-pill);padding:5px 12px;font:inherit;font-size:12.5px;
+  color:var(--carbon);cursor:pointer;display:inline-flex;align-items:baseline;
+  gap:7px;transition:background .12s,border-color .12s,color .12s}
+.suite button:hover{background:var(--wash);border-color:var(--forest);
+  color:var(--forest)}
+.suite button i{font-style:normal;font-size:11px;color:var(--smoke)}
+.suite button:hover i{color:var(--forest);opacity:.75}
+.rgls{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.rgl{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--fog);
+  border-radius:var(--r-pill);padding:3px 4px 3px 10px;background:var(--paper)}
+.rgl b{font-size:11px;font-weight:500;color:var(--smoke);letter-spacing:.01em}
+.rgl button{min-width:22px;height:22px;padding:0 7px;border-radius:var(--r-pill);
+  background:var(--mist);color:var(--carbon);font-size:11.5px;font-weight:600}
+.rgl button:hover{background:var(--wash);color:var(--forest)}
+
+/* -------------------------------------------------------------- la scene */
+.scene{
+  min-width:0;background:var(--onyx);display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:14px;padding:20px;min-height:0;
+}
+.cadre{
+  position:relative;height:100%;aspect-ratio:9/16;background:#000;
+  border-radius:var(--r-card);overflow:hidden;
+}
+.cadre video{width:100%;height:100%;object-fit:cover;display:block;
+  filter:contrast(var(--i-c,1)) brightness(var(--i-l,1)) saturate(var(--i-s,1))}
+/* L'etalonnage est pose SOUS les sous-titres, comme au rendu : un texte blanc
+   ne doit pas etre assombri par la vignette ni desature avec l'image. */
+/* Le masque est dessine sous nos sous-titres, comme au rendu. Le mode flou
+   utilise backdrop-filter : c'est un vrai flou de ce qu'il y a dessous, donc
+   l'apercu montre ce que delogo produira, a peu pres. */
+#masque{position:absolute;left:0;right:0;pointer-events:none;display:none;
+  top:var(--m-haut,78%);height:var(--m-h,7%)}
+#masque.boite{display:block;background:#000}
+#masque.flou{display:block;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+#teinte{position:absolute;inset:0;pointer-events:none;
+  background:var(--i-teinte,transparent);mix-blend-mode:soft-light}
+#vign{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 72% 62% at 50% 50%,
+    transparent 40%, rgba(0,0,0,var(--i-v,0)) 100%)}
+/* le sous-titre est dessine ici avec les MEMES reglages que le rendu :
+   ce qu'on voit est ce qui sortira dans le mp4. */
+#stLive{
+  position:absolute;left:50%;transform:translateX(-50%);
+  width:var(--st-largeur,84%);text-align:center;pointer-events:none;
+  top:var(--st-haut,57%);
+  font-family:"Arial Black",Arial,Helvetica,sans-serif;font-weight:700;
+  font-size:var(--st-taille,3.6cqh);line-height:1.18;
+  color:var(--st-couleur,#fff);
+  text-transform:var(--st-maj,none);
+  text-shadow:var(--st-ombre,0 .06em .1em rgba(0,0,0,.6));
+  white-space:pre-wrap;
+}
+.cadre{container-type:size}
+#stLive span{
+  background:var(--st-fond,transparent);
+  color:var(--st-fond-texte,inherit);
+  border-radius:.34em;
+  padding:var(--st-pad,0);
+  box-decoration-break:clone;-webkit-box-decoration-break:clone;
+}
+.transport{display:flex;align-items:center;gap:14px;color:#fff;font-size:12.5px}
+.transport button{
+  width:34px;height:34px;border-radius:var(--r-pill);background:#ffffff14;
+  color:#fff;display:grid;place-items:center;font-size:13px;
+}
+.transport button:hover{background:#ffffff26}
+.tnum{font-variant-numeric:tabular-nums;color:#ffffffb0}
+.tnum b{color:#fff;font-weight:500}
+
+/* ------------------------------------------------------------- reglages */
+.bloc{display:flex;flex-direction:column;gap:10px}
+.ligne{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ligne label{font-size:13px;color:var(--charcoal)}
+.val{font-size:12px;color:var(--smoke);font-variant-numeric:tabular-nums}
+.choix{display:flex;gap:6px;flex-wrap:wrap}
+.choix button{
+  border:1px solid var(--fog);border-radius:var(--r-btn);padding:6px 10px;
+  font-size:12.5px;font-weight:500;color:var(--charcoal);
+}
+.choix button:hover{background:var(--mist)}
+.choix button.on{
+  background:var(--wash);border-color:var(--forest);color:var(--forest);font-weight:600;
+}
+input[type=range]{width:100%;accent-color:var(--carbon)}
+.aide{font-size:11.5px;line-height:1.45;color:var(--smoke)}
+
+/* -------------------------------------------------------------- la frise */
+.frise{
+  border-top:1px solid var(--fog);padding:8px 16px 12px;background:var(--paper);
+  display:flex;flex-direction:column;gap:6px;min-width:0;overflow:hidden;
+}
+.frise .entete{display:flex;align-items:center;gap:12px}
+.selinfo{font-size:12px;color:var(--smoke);font-variant-numeric:tabular-nums}
+.selinfo b{color:var(--carbon);font-weight:600}
+.zoom{margin-left:auto;display:flex;align-items:center;gap:6px}
+.zoom button{
+  width:26px;height:26px;border:1px solid var(--fog);border-radius:var(--r-btn);
+  color:var(--charcoal);display:grid;place-items:center;font-size:13px;
+}
+.zoom button:hover{background:var(--mist)}
+.defile{overflow-x:auto;overflow-y:hidden;padding-bottom:2px;max-width:100%}
+.dedans{position:relative}
+/* La regle : etiquettes chiffrees, points en subdivision. Les secondes sont
+   arrondies vers le bas, comme le compteur d'un banc de montage. */
+.regle{position:relative;height:16px;border-bottom:1px solid var(--fog);margin-bottom:4px}
+.regle span{pointer-events:none;position:absolute;top:1px;font-size:10px;color:var(--smoke);
+  font-variant-numeric:tabular-nums;transform:translateX(-1px);padding-left:3px;
+  border-left:1px solid var(--fog);height:14px;line-height:14px}
+.regle i{pointer-events:none;position:absolute;top:8px;width:2px;height:2px;border-radius:2px;background:var(--fog)}
+.piste{position:relative;height:40px;background:var(--mist);border-radius:var(--r-btn)}
+.piste.texte{height:26px;background:var(--paper);border:1px solid var(--fog);margin-top:4px}
+.piste.texte:empty::before{content:"aucun sous-titre : ce projet a été analysé sans transcription";
+  position:absolute;left:8px;top:5px;font-size:10.5px;color:var(--smoke)}
+.bloc-plan{
+  position:absolute;top:3px;bottom:3px;border-radius:6px;background:var(--paper);
+  border:1px solid var(--fog);font-size:10.5px;color:var(--smoke);
+  overflow:hidden;cursor:pointer;
+}
+.bloc-plan:hover{border-color:var(--slate)}
+/* Le mouvement se lit DANS le plan, la transition SUR la coupe : ce sont deux
+   choses differentes et les confondre fait poser la mauvaise. */
+/* Un plan trop etroit pour un libelle porte un POINT : « ca bouge ici ».
+   Sans lui, 8 mouvements sur 15 etaient invisibles dans la frise. */
+.bloc-plan i.mvt.pt{width:5px;height:5px;padding:0;border-radius:50%;
+  background:var(--forest);top:4px;right:3px}
+.bloc-plan i.mvt{position:absolute;top:3px;right:4px;font-style:normal;
+  font-size:9px;letter-spacing:.02em;color:var(--forest);background:var(--wash);
+  border-radius:3px;padding:0 3px;pointer-events:none}
+/* Les transitions ont leur PROPRE bande. Posees sur la piste image, leurs
+   pastilles recouvraient le numero du plan suivant — et ce numero est ce qui
+   permet de designer le plan dans le chat. */
+.piste.coupes{height:17px;margin-bottom:2px;background:transparent;border:0}
+.coupe{position:absolute;top:0;bottom:0;width:0;z-index:3;pointer-events:none}
+.coupe b{position:absolute;top:0;left:0;transform:translateX(-50%);
+  font-size:8.5px;font-weight:700;letter-spacing:.04em;white-space:nowrap;
+  background:var(--lime);color:var(--forest);border:1px solid var(--forest);
+  border-radius:3px;padding:1px 4px;pointer-events:auto;cursor:help}
+.coupe:after{content:"";position:absolute;top:15px;left:-1px;height:8px;
+  width:2px;background:var(--forest);opacity:.5}
+.bloc-plan.on{background:var(--wash);border-color:var(--forest);color:var(--forest)}
+.bloc-plan.sel{border:2px solid var(--carbon);background:var(--paper)}
+.bloc-plan.sel.on{background:var(--wash)}
+.bloc-plan em{position:absolute;top:3px;left:5px;font-style:normal;font-weight:600;
+  color:var(--carbon);font-size:10px}
+.bloc-plan u{position:absolute;bottom:2px;left:5px;text-decoration:none;
+  font-variant-numeric:tabular-nums}
+/* Poignees de rognage. Zone de saisie plus large que le trait visible : c'est
+   la regle des bancs de montage, on attrape sans viser. */
+.poignee{position:absolute;top:-2px;bottom:-2px;width:16px;cursor:ew-resize;z-index:4;
+  display:grid;place-items:center}
+.poignee::after{content:"";width:4px;height:60%;border-radius:3px;background:var(--carbon)}
+.poignee.g{left:0} .poignee.d{right:0}
+.bloc-st{
+  position:absolute;top:3px;bottom:3px;border-radius:5px;background:var(--mist);
+  border:1px solid var(--fog);font-size:10px;color:var(--charcoal);
+  display:flex;align-items:center;padding:0 5px;overflow:hidden;white-space:nowrap;cursor:pointer;
+}
+.bloc-st.on{background:var(--carbon);color:#fff;border-color:var(--carbon)}
+.bloc-st.cheval{border-color:#c26a00;border-width:1.5px}
+.tete{position:absolute;top:0;bottom:0;width:2px;background:var(--carbon);pointer-events:none;z-index:5}
+.pistes-tetes{display:flex;gap:6px;margin-bottom:-2px}
+.oeil{border:1px solid var(--fog);border-radius:var(--r-btn);padding:3px 9px;
+  font-size:10px;font-weight:600;letter-spacing:.05em;color:var(--smoke);background:var(--paper)}
+.oeil.on{background:var(--wash);border-color:var(--forest);color:var(--forest)}
+.legende{display:flex;gap:14px;font-size:11px;color:var(--smoke);align-items:center}
+.legende i{font-style:normal;display:inline-flex;align-items:center;gap:5px}
+.pastille{width:9px;height:9px;border-radius:3px;display:inline-block}
+
+/* La piste SON. L'onde est horodatee sur la SOURCE, comme les mots : chaque
+   plan y repioche son morceau. Dessinee sur le temps de MONTAGE elle
+   montrerait une forme que personne n'entend. */
+.piste.son{height:34px;margin-top:4px;background:var(--mist);overflow:hidden}
+.piste.son canvas{display:block;width:100%;height:100%}
+.piste.son.muet::after{content:attr(data-vide);position:absolute;left:8px;top:9px;
+  font-size:10.5px;color:var(--smoke)}
+
+/* La poignee « ⋯ » du plan choisi : elle ouvre le menu sans avoir a connaitre
+   le clic droit, qui n'existe pas au doigt. */
+/* Sur un plan CHOISI, les deux poignees occupent 16 px de chaque bord : le
+   numero et la duree passaient dessous et devenaient illisibles. Or le numero
+   est ce qui sert a designer le plan dans le chat. On les decale. */
+.bloc-plan.sel em, .bloc-plan.sel u{left:19px}
+.bloc-plan b.plus{position:absolute;bottom:1px;right:19px;z-index:6;
+  font-size:11px;line-height:11px;color:var(--slate);padding:1px 3px;
+  border-radius:4px;background:var(--paper);border:1px solid var(--fog);cursor:pointer}
+.bloc-plan b.plus:hover{background:var(--wash);border-color:var(--forest);color:var(--forest)}
+
+/* Le menu du plan : clic droit, poignee ⋯, ou la touche M. */
+.menu{position:fixed;z-index:70;min-width:250px;max-width:calc(100vw - 20px);
+  background:var(--paper);border:1px solid var(--fog);border-radius:12px;
+  padding:9px;box-shadow:0 12px 34px rgba(0,0,0,.16);display:none}
+.menu.on{display:block}
+.menu h4{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--smoke);margin:8px 2px 5px}
+.menu h4:first-child{margin-top:2px}
+.menu .titre{font-size:12.5px;font-weight:600;color:var(--carbon);padding:1px 2px 5px;
+  border-bottom:1px solid var(--fog);margin-bottom:4px}
+.menu .rangee{display:flex;flex-wrap:wrap;gap:4px}
+.menu button{border:1px solid var(--fog);border-radius:var(--r-btn);
+  padding:5px 9px;font-size:12px;color:var(--charcoal);background:var(--paper);
+  display:inline-flex;align-items:center;gap:6px}
+.menu button:hover{background:var(--mist)}
+.menu button.on{background:var(--wash);border-color:var(--forest);color:var(--forest);font-weight:600}
+.menu button.danger:hover{background:#ffecec;border-color:#c0392b;color:#a5281a}
+.menu button kbd{font:inherit;font-size:10px;color:var(--smoke);border:1px solid var(--fog);
+  border-radius:4px;padding:0 3px;background:var(--mist)}
+.menu .large{display:flex;flex-direction:column;gap:4px}
+.menu .large button{justify-content:flex-start;width:100%}
+
+/* Les raccourcis. Un banc de montage se tient au clavier : la souris sert a
+   viser, pas a repeter. */
+.voile{position:fixed;inset:0;background:rgba(12,10,9,.32);z-index:65;display:none}
+.voile.on{display:block}
+.aide-clavier{position:fixed;z-index:66;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(560px,calc(100vw - 32px));max-height:80vh;overflow:auto;background:var(--paper);
+  border:1px solid var(--fog);border-radius:var(--r-card);padding:18px 20px;
+  box-shadow:0 20px 60px rgba(0,0,0,.2);display:none}
+.aide-clavier.on{display:block}
+.aide-clavier h2{font-size:15px;font-weight:600;margin-bottom:2px}
+.aide-clavier p.sous{font-size:12px;color:var(--smoke);margin-bottom:12px}
+.aide-clavier table{width:100%;border-collapse:collapse;font-size:12.5px}
+.aide-clavier td{padding:5px 4px;border-bottom:1px solid var(--fog);vertical-align:top}
+.aide-clavier td:first-child{width:132px;white-space:nowrap}
+.aide-clavier tr:last-child td{border-bottom:0}
+.aide-clavier kbd{font:inherit;font-size:11px;font-weight:600;border:1px solid var(--fog);
+  border-bottom-width:2px;border-radius:5px;padding:1px 6px;background:var(--mist);
+  color:var(--charcoal);display:inline-block}
+</style>
+</head>
+<body>
+
+<div id="envoi"><i></i></div>
+<div id="depotVoile"><div class="boite">
+  <b>Lâche ta vidéo ici</b>
+  <span>Je la range, je la découpe en plans et je transcris la voix mot à mot.
+  Ensuite tu n'as plus qu'à parler.<br>mp4, mov, m4v ou webm</span>
+</div></div>
+<input type="file" id="fDepot" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.m4v,.webm" hidden>
+<header class="top">
+  <div class="marque">Monteur <i>e-com</i></div>
+  <div class="sep"></div>
+  <button class="ghost" id="bDeposer">Déposer une vidéo</button>
+  <select id="selProjet" class="pill"></select>
+  <span class="val" id="infoProjet"></span>
+  <div class="pousse"></div>
+  <button class="ghost" id="bApercu">Aperçu rapide</button>
+  <button class="ghost" id="bAnalyser">Analyser</button>
+  <button class="ghost" id="bAnnuler">Annuler</button>
+  <button class="ghost" id="bReglages">Réglages fins</button>
+  <button class="lime" id="bRendre">Rendre la vidéo</button>
+</header>
+
+<div class="source">
+  <div class="quoi">
+    <span class="nom" id="srcNom">aucune vidéo</span>
+    <span class="fiche" id="srcFiche"></span>
+  </div>
+  <div class="zone" id="zDepot" tabindex="0" role="button"
+       aria-label="Ajouter une vidéo">
+    <b>+ Ajouter une vidéo</b>
+    <span class="surGrand">ou lâche-la n'importe où sur la page</span>
+  </div>
+</div>
+
+<main class="grille">
+
+  <section class="scene">
+    <div class="vide">
+    <b>Commence par une vidéo</b>
+    <p>Lâche-la n'importe où sur cette page, ou choisis-la ci-dessous.
+       Je la découpe en plans et je transcris la voix. Ensuite tu parles,
+       et je monte.</p>
+    <button id="bVideDepot">Choisir une vidéo</button>
+  </div>
+  <div class="cadre" id="cadre">
+      <video id="video" playsinline preload="metadata"></video>
+      <div id="masque"></div>
+      <div id="teinte"></div>
+      <div id="vign"></div>
+      <div id="stLive"></div>
+    </div>
+    <div class="transport">
+      <button id="bPlay">▶</button>
+      <span class="tnum"><b id="tCourant">00:00:00</b> / <span id="tTotal">00:00:00</span></span>
+      <span class="tnum">plan <b id="tPlan">–</b></span>
+    </div>
+  </section>
+
+  <aside class="col gauche">
+    <div class="fil" id="fil"></div>
+    <div class="pied">
+      <!-- Ce qu'il y a a dire APRES. Un outil qu'on dicte doit proposer le
+           geste suivant : sans ca il faut connaitre son vocabulaire avant de
+           pouvoir s'en servir. Chaque puce est une PHRASE, elle repart par la
+           voie 1 comme si Eric l'avait dite. -->
+      <div class="suite" id="suite"></div>
+      <div class="demande">
+        <textarea id="txtDemande" rows="2" placeholder="Dis ce que tu veux. « monte-moi une pub de 30 secondes », « dynamise le montage », « annule », « rends la vidéo »…"></textarea>
+        <div class="bas">
+          <button class="puce" data-ex="raccourcis le hook à 1,3 s">hook plus court</button>
+          <button class="puce" data-ex="masque les sous-titres">masquer</button>
+          <button class="puce" id="bRegarder" title="Claude Code ouvre les images du montage et décrit chaque plan">regarder</button>
+          <button class="puce" id="bScript" title="Coller un texte corrigé et le caler sur la voix">script</button>
+          <button class="puce" data-ex="coupe plus vite">plus nerveux</button>
+          <button class="puce" id="bVeille" title="Ce que tu as demandé et qui n'a pas abouti, et si c'est encore cassé aujourd'hui">ce qui cloche</button>
+          <button class="puce fort" data-ex="dynamise le montage" title="Regarde la vidéo, puis pose les transitions et les mouvements là où ils servent">dynamiser</button>
+          <button class="rond micro" id="bMicro" title="Parler (⌘M)">●</button>
+          <button class="puce" id="bVoixOff" title="Enregistrer une voix off qui remplace le son">voix off</button>
+          <button class="rond" id="bEnvoyer" title="Envoyer (⌘↵)">↑</button>
+        </div>
+        <p class="aide mode">
+          <b>●</b> parle, <b>⌘M</b> aussi. Le Mac transcrit tout seul, rien ne sort d'ici.
+          <b>voix off</b> enregistre une voix qui remplace le son du film et refait les sous-titres.
+          <b>script</b> ouvre le panneau où tu colles un texte corrigé&nbsp;: il se cale sur la voix
+          sans toucher ni à l'image ni au son.<br>
+          Ce que l'outil connaît part tout de suite et ne coûte rien. Le reste passe par
+          <b>Claude Code</b>, qui le traduit. <b>regarder</b> lui fait ouvrir les images du
+          montage&nbsp;: il décrit chaque plan une bonne fois, et ensuite « supprime le plan
+          où on voit la neige » devient une phrase comme les autres. Le badge te dit quelle
+          voie a travaillé et ce qu'elle a coûté.
+        </p>
+      </div>
+    </div>
+  </aside>
+
+  <aside class="col droite">
+    <div class="bloc">
+      <h3>Script</h3>
+      <textarea id="txtScript" rows="5" placeholder="Colle ici le texte corrigé. Il remplace les sous-titres et se cale sur la voix déjà enregistrée."></textarea>
+      <div class="ligne">
+        <button class="puce" id="bLireScript">Lire le texte actuel</button>
+        <button class="puce fort" id="bPoserScript">Caler sur la voix</button>
+      </div>
+      <p class="aide">Le son ne bouge pas, l'image non plus&nbsp;: seul le texte affiché change. Un mot inchangé garde son horodatage exact&nbsp;; un mot corrigé reçoit un temps calculé entre ses voisins.</p>
+    </div>
+
+    <div class="bloc">
+      <h3>Vidéos</h3>
+      <div id="rushes" class="rushes"></div>
+      <p class="aide">« Générer les sous-titres » découpe la vidéo en plans et transcrit la voix mot à mot, en local. Aucune donnée ne sort du Mac.</p>
+    </div>
+
+    <div class="bloc">
+      <h3>Sous-titres</h3>
+      <div class="ligne"><label>Fond derrière le texte</label></div>
+      <div class="choix" id="chFond">
+        <button data-v="">Aucun</button>
+        <button data-v="#FFFFFF">Blanc</button>
+        <button data-v="#0c0a09">Noir</button>
+      </div>
+      <div class="ligne"><label>Couleur du texte</label></div>
+      <div class="choix" id="chCouleur">
+        <button data-v="#FFFFFF">Blanc</button>
+        <button data-v="#96ff1a">Lime</button>
+        <button data-v="#FFE600">Jaune</button>
+      </div>
+      <div class="ligne"><label>Taille</label><span class="val" id="vTaille"></span></div>
+      <input type="range" id="rTaille" min="2.2" max="6.5" step="0.1">
+      <div class="ligne"><label>Hauteur dans l'image</label><span class="val" id="vHaut"></span></div>
+      <input type="range" id="rHaut" min="15" max="90" step="1">
+      <div class="ligne"><label>Largeur du bloc</label><span class="val" id="vLarge"></span></div>
+      <input type="range" id="rLarge" min="45" max="96" step="1">
+      <div class="ligne"><label>Mots par carte</label><span class="val" id="vMots"></span></div>
+      <input type="range" id="rMots" min="2" max="10" step="1">
+      <div class="ligne"><label>Majuscules</label></div>
+      <div class="choix" id="chMaj">
+        <button data-v="0">Normal</button><button data-v="1">MAJUSCULES</button>
+      </div>
+      <div class="ligne"><label>Détourage</label></div>
+      <div class="choix" id="chContour">
+        <button data-v="0">Ombre</button><button data-v="3">Contour noir</button>
+      </div>
+    </div>
+    <div class="bloc">
+      <h3>Image</h3>
+      <div class="choix" id="chLook">
+        <button data-v="neutre">À plat</button>
+        <button data-v="punchy">Punchy</button>
+        <button data-v="cinema">Cinéma</button>
+        <button data-v="doux">Doux</button>
+      </div>
+      <div class="ligne"><label>Contraste</label><span class="val" id="vC"></span></div>
+      <input type="range" id="rC" min="0.4" max="2.2" step="0.02">
+      <div class="ligne"><label>Saturation</label><span class="val" id="vS"></span></div>
+      <input type="range" id="rS" min="0" max="2.5" step="0.05">
+      <div class="ligne"><label>Luminosité</label><span class="val" id="vL"></span></div>
+      <input type="range" id="rL" min="-0.5" max="0.5" step="0.02">
+      <div class="ligne"><label>Chaleur</label><span class="val" id="vCh"></span></div>
+      <input type="range" id="rCh" min="-1" max="1" step="0.05">
+      <div class="ligne"><label>Vignette</label><span class="val" id="vV"></span></div>
+      <input type="range" id="rV" min="0" max="1" step="0.05">
+      <div class="ligne"><label>Netteté</label><span class="val" id="vN"></span></div>
+      <input type="range" id="rN" min="0" max="1" step="0.05">
+      <p class="aide">Contraste, saturation et luminosité sont exacts dans l'aperçu. Chaleur et vignette sont approchées&nbsp;; la netteté ne se voit qu'au rendu.</p>
+    </div>
+
+    <div class="bloc">
+      <h3>Sous-titres incrustés</h3>
+      <div class="choix" id="chMasque">
+        <button data-v="">Aucun</button>
+        <button data-v="boite">Boîte</button>
+        <button data-v="flou">Flou</button>
+      </div>
+      <div class="ligne"><label>Position</label><span class="val" id="vMH"></span></div>
+      <input type="range" id="rMH" min="30" max="95" step="0.5">
+      <div class="ligne"><label>Épaisseur</label><span class="val" id="vME"></span></div>
+      <input type="range" id="rME" min="2" max="30" step="0.5">
+      <p class="aide" id="aideMasque">« Masque les sous-titres » cherche la bande toute seule. Elle se trompe parfois&nbsp;: vérifie sur l'aperçu et corrige avec les deux curseurs.</p>
+    </div>
+
+    <div class="bloc">
+      <h3>Bruits sur les coupes</h3>
+      <div class="choix" id="chSfx">
+        <button data-v="">Aucun</button>
+        <button data-v="whoosh">Whoosh</button>
+        <button data-v="clic">Clic</button>
+        <button data-v="riser">Riser</button>
+      </div>
+      <p class="aide">Sons synthétisés, rien à licencier. Mixés sous la voix. Audibles après un rendu.</p>
+    </div>
+
+    <div class="bloc">
+      <h3>Transitions</h3>
+      <div class="choix" id="chTrans">
+        <button data-v="0">Coupe franche</button>
+        <button data-v="0.2">Fondu 0,2 s</button>
+        <button data-v="0.35">Fondu 0,35 s</button>
+      </div>
+      <p class="aide">Le fondu prend ses images sur la suite du plan, pas sur sa durée&nbsp;: le film garde la même longueur. Visible après un rendu.</p>
+    </div>
+  </aside>
+
+</main>
+
+<footer class="frise">
+  <div class="entete">
+    <h3>Frise</h3>
+    <span class="selinfo" id="selInfo">Clique un plan pour le sélectionner, tire ses poignées pour le rallonger ou le raccourcir.</span>
+    <div class="zoom">
+      <div class="legende">
+        <i><span class="pastille" style="background:var(--wash);border:1px solid var(--forest)"></span> lu</i>
+        <i><span class="pastille" style="border:1.5px solid #c26a00;background:transparent"></span> à cheval sur une coupe</i>
+      </div>
+      <button id="bCouper" title="Couper le plan au curseur (B)">✂</button>
+      <button id="bMoins" title="Dézoomer (−)">−</button>
+      <button id="bAjuster" title="Tout voir (0)">⇔</button>
+      <button id="bPlus" title="Zoomer (+)">+</button>
+      <button id="bAide" title="Raccourcis clavier (?)">?</button>
+    </div>
+  </div>
+  <div class="pistes-tetes">
+    <button class="oeil on" id="oeilImage" title="montrer ou cacher l'image">IMAGE</button>
+    <button class="oeil on" id="oeilSon" title="couper ou remettre le son de l'aperçu">SON</button>
+    <button class="oeil on" id="oeilTexte" title="montrer ou cacher les sous-titres">TEXTE</button>
+  </div>
+  <div class="defile" id="defile">
+    <div class="dedans" id="dedans">
+      <div class="regle" id="regle"></div>
+      <div class="piste coupes" id="pisteCoupes"></div>
+      <div class="piste" id="pisteImage"></div>
+      <div class="piste son" id="pisteSon"><canvas id="onde"></canvas></div>
+      <div class="piste texte" id="pisteTexte"></div>
+      <div class="tete" id="tete"></div>
+    </div>
+  </div>
+</footer>
+
+<div class="menu" id="menuPlan"></div>
+<div class="voile" id="voile"></div>
+<div class="aide-clavier" id="aideClavier">
+  <h2>Raccourcis</h2>
+  <p class="sous">Ils marchent partout sauf quand tu écris dans un champ&nbsp;: là, les touches restent des lettres.</p>
+  <table>
+    <tr><td><kbd>Espace</kbd></td><td>lecture ou pause</td></tr>
+    <tr><td><kbd>B</kbd></td><td>couper le plan à la tête de lecture</td></tr>
+    <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>reculer ou avancer d’une image</td></tr>
+    <tr><td><kbd>⇧</kbd>+<kbd>←</kbd> <kbd>→</kbd></td><td>d’une seconde</td></tr>
+    <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>plan précédent ou suivant</td></tr>
+    <tr><td><kbd>M</kbd></td><td>menu du plan choisi</td></tr>
+    <tr><td><kbd>D</kbd></td><td>dupliquer le plan choisi</td></tr>
+    <tr><td><kbd>⌫</kbd></td><td>supprimer le plan choisi</td></tr>
+    <tr><td><kbd>+</kbd> <kbd>−</kbd></td><td>zoomer, dézoomer (la tête de lecture reste en place)</td></tr>
+    <tr><td><kbd>0</kbd></td><td>tout voir d’un coup</td></tr>
+    <tr><td><kbd>I</kbd> <kbd>O</kbd></td><td>entrer plus tard, sortir plus tôt&nbsp;: le bord du plan vient à la tête</td></tr>
+    <tr><td><kbd>⌘Z</kbd></td><td>annuler le dernier changement</td></tr>
+    <tr><td><kbd>⌘M</kbd></td><td>parler au montage</td></tr>
+    <tr><td><kbd>?</kbd></td><td>cette liste</td></tr>
+  </table>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+let ETAT = null, NOM = null, BP = null, CARTES = [], ST = {}, DEFAUT = {}, TOTAL = 0, BORNES = [];
+const IMG_DEFAUT = {contraste:1, luminosite:0, saturation:1, chaleur:0, nettete:0, vignette:0};
+let IMG = {...IMG_DEFAUT};
+
+const fr = n => n.toFixed(2).replace('.', ',');
+/* 00:12:07 = minutes, secondes, IMAGES. Une durée de montage se compte en
+   images : « 0,23 s » ne dit pas si on peut encore gagner une image. */
+const FPS = 30;
+function tc(t){
+  t = Math.max(0, t);
+  const m = Math.floor(t / 60), s2 = Math.floor(t % 60);
+  const f = Math.round((t - Math.floor(t)) * FPS) % FPS;
+  return String(m).padStart(2,'0') + ':' + String(s2).padStart(2,'0')
+       + ':' + String(f).padStart(2,'0');
+}
+
+/* Plusieurs versions de la meme pub. Elles sortent les unes apres les autres,
+   et chacune dit de combien de plans elle s'ecarte de l'originale : c'est la
+   seule mesure qui dit si deux creas sont vraiment deux creas. */
+async function variantes(n){
+  let r;
+  try{
+    r = await (await fetch('/api/variantes', {method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({projet: NOM, combien: n})})).json();
+  }catch(e){ return dire('Le tirage n\'est pas parti.', 'rien') }
+  if (r.erreur) return dire('Impossible : ' + esc(r.erreur), 'rien');
+  const ligne = dire('<b>Tirage en cours…</b>');
+  const suivre = setInterval(async () => {
+    const t = await (await fetch('/api/tache/' + r.tache)).json();
+    const der = (t.lignes || []).slice(-1)[0] || '';
+    ligne.innerHTML = '<b>Tirage en cours…</b><br><span class="fin">'
+                    + esc(der) + '</span>';
+    if (t.etat === 'en cours') return;
+    clearInterval(suivre);
+    if (t.etat !== 'fini')
+      return ligne.innerHTML = '<b>Le tirage a échoué.</b><br>'
+        + '<span class="fin">' + esc((t.lignes || []).slice(-3).join(' · ')) + '</span>';
+    ligne.className = 'msg fait';
+    ligne.innerHTML = '<b>Versions prêtes.</b><ul>'
+      + (t.lignes || []).filter(l => l.includes('different')).map(l => '<li>' + esc(l) + '</li>').join('')
+      + '</ul><span class="fin">Choisis-les dans la liste des projets, en haut.</span>';
+    ETAT = await (await fetch('/api/etat')).json(); catalogue(ETAT);
+    const sel = $('#selProjet'); const garde = NOM;
+    sel.innerHTML = ETAT.projets.map(p =>
+      `<option value="${esc(p.nom)}">${esc(p.nom)} — ${p.n_plans} plans, ${fr(p.duree)} s</option>`).join('');
+    sel.value = garde;
+  }, 1200);
+}
+
+/* La suite : les deux ou trois phrases qui ont un sens MAINTENANT, vu l'état
+   réel du montage. C'est le serveur qui décide, pas la page : le même code lit
+   la recette pour proposer et pour exécuter, donc il ne peut pas proposer un
+   geste que les règles ne savent pas faire. */
+function poserSuite(liste){
+  const b = $('#suite');
+  if (!b) return;
+  if (!liste || !liste.length){ b.innerHTML = ''; return }
+  b.innerHTML = '<span class="quoi">et maintenant</span>'
+    + liste.map(s => '<button data-p="' + esc(s.phrase) + '">' + esc(s.phrase)
+        + (s.pourquoi ? ' <i>' + esc(s.pourquoi) + '</i>' : '')
+        + '</button>').join('');
+}
+async function chargerSuite(){
+  if (!NOM) return;
+  try{
+    const r = await (await fetch('/api/suite/' + encodeURIComponent(NOM))).json();
+    poserSuite(r.suite);
+  }catch(e){ /* la suite est un confort : elle ne bloque jamais le montage */ }
+}
+
+/* Le fil est en column-reverse : ajouter en tete place le message EN BAS et
+   garde le defilement colle au dernier, comme une conversation. */
+function dire(html, classe){
+  const d = document.createElement('div');
+  d.className = 'msg' + (classe ? ' ' + classe : '');
+  d.innerHTML = html;
+  $('#fil').prepend(d);
+  while ($('#fil').children.length > 40) $('#fil').lastChild.remove();
+  return d;
+}
+
+/* ---------------------------------------------------------------- chargement */
+async function init(){
+  ETAT = await (await fetch('/api/etat')).json(); catalogue(ETAT);
+  const sel = $('#selProjet');
+  sel.innerHTML = ETAT.projets.map(p =>
+    `<option value="${esc(p.nom)}">${esc(p.nom)} — ${p.n_plans} plans, ${fr(p.duree)} s</option>`).join('');
+  const avecRush = new Set(ETAT.rushes.map(r => r.nom));
+  const rang = p => (avecRush.has(p.nom) ? 0 : 100) + (p.vision ? 0 : 10) - p.n_plans / 1000;
+  const classes = [...ETAT.projets].sort((a, b) => rang(a) - rang(b));
+  // ?projet=… prend le pas sur le dernier ouvert : ca permet d'envoyer un lien
+  // vers un montage precis, et de le controler sans toucher au reglage d'Eric.
+  const memo = new URLSearchParams(location.search).get('projet')
+            || localStorage.getItem('monteur.projet');
+  NOM = (memo && ETAT.projets.some(p => p.nom === memo)) ? memo
+      : (classes[0] || {}).nom;
+  if (!NOM){ dire('Aucun projet analysé pour l\'instant.'); return }
+  sel.value = NOM;
+  sel.onchange = async () => { NOM = sel.value; localStorage.setItem('monteur.projet', NOM);
+    $('#fil').innerHTML = ''; await charger(); await histoire() };
+  await charger();
+  await histoire();
+  dire('<b>Écris ce que tu veux, je monte.</b><br>'
+     + 'Par exemple : « raccourcis le hook à 1,3 s », « enlève le fond des sous-titres », '
+     + '« coupe plus vite », « 4 mots par sous-titre », « mets un fondu de 0,2 s », '
+     + '« enlève les silences », « supprime le plan 5 ».<br>'
+     + 'L\'aperçu se met à jour tout de suite, sans rendu. Le bouton <b>Rendre la vidéo</b> '
+     + 'ne sert qu\'à sortir le mp4 final.');
+}
+
+/* Le journal des modifications, affiche. Sans lui, un montage change sans que
+   personne sache par qui ni quand : il a fallu comparer deux sauvegardes pour
+   retrouver qui avait raccourci un hook. Un outil qui agit doit rendre compte. */
+async function histoire(){
+  let j = [];
+  try { j = await (await fetch('/api/demandes')).json() } catch(e){ return }
+  const miens = j.filter(x => x.projet === NOM).slice(-6);
+  if (!miens.length) return;
+  dire('<b>Ce qui a déjà été fait sur ce projet.</b> '
+     + 'Le bouton <b>Annuler</b> revient d\'un pas en arrière.');
+  for (const x of miens){
+    const faits = (x.changements || []);
+    dire('<span class="quand">' + esc((x.t || '').slice(5, 16)) + '</span> «&nbsp;'
+       + esc(x.texte) + '&nbsp;»'
+       + (faits.length ? '<ul>' + faits.map(c => '<li>' + esc(c) + '</li>').join('') + '</ul>'
+                       : '<br><span class="attente">non compris à l\'époque</span>'),
+       faits.length ? 'fait' : 'rien');
+  }
+}
+
+/* D'ou vient la video, ecrit en clair et en permanence. Le nom du fichier de
+   depart n'apparaissait NULLE PART dans la page : on voyait un montage sans
+   savoir sur quoi il portait. */
+function majSource(){
+  const n_ = $('#srcNom'), fi = $('#srcFiche');
+  if (!n_ || !fi) return;
+  document.body.classList.toggle('aucun', !BP || !BP.plans || !BP.plans.length);
+  if (!BP){ n_.textContent = 'aucune vidéo'; fi.textContent = ''; return }
+  // Un remontage n'a pas UN fichier de depart, il en a plusieurs : le dire,
+  // plutot que d'afficher le premier et laisser croire qu'il n'y a que lui.
+  const sources = new Set((BP.plans || []).map(p => p.source).filter(Boolean));
+  const base = (BP.chemin || '').split('/').pop();
+  n_.textContent = sources.size > 1
+    ? sources.size + ' fichiers (remontage)'
+    : (base || [...sources][0]?.split('/').pop() || 'source inconnue');
+  n_.title = BP.chemin || [...sources].join('\n') || '';
+  const c = BP.conteneur || {};
+  const bouts = [];
+  if (c.largeur && c.hauteur){
+    const vert = Math.abs(c.largeur / c.hauteur - 9 / 16) < .01;
+    bouts.push(c.largeur + '×' + c.hauteur + (vert ? ' · 9:16' : ' · à recadrer'));
+  }
+  if (c.duree) bouts.push('rush de ' + fr(c.duree) + ' s');
+  if (c.fps) bouts.push(Math.round(c.fps) + ' i/s');
+  fi.textContent = bouts.join('  ·  ');
+}
+
+async function charger(silencieux){
+  BP = await (await fetch('/api/projet/' + encodeURIComponent(NOM))).json();
+  const c = await (await fetch('/api/cartes/' + encodeURIComponent(NOM))).json();
+  CARTES = c.cartes || []; ST = c.style || {}; DEFAUT = c.defaut || {};
+  if (c.erreur && !silencieux) dire('Le calcul des sous-titres a échoué : ' + c.erreur);
+
+  chargerSuite();
+  TOTAL = BP.plans.reduce((s, p) => s + p.duree, 0);
+  BORNES = []; let t = 0;
+  for (const p of BP.plans){ BORNES.push([t, t + p.duree, p]); t += p.duree }
+
+  $('#tTotal').textContent = tc(TOTAL);
+  $('#infoProjet').textContent = BP.plans.length + ' plans · ' + CARTES.length + ' sous-titres';
+  majSource();
+  $('#video').src = c.video ? '/media?f=' + encodeURIComponent(c.video) : '';
+  if (!c.video && !silencieux) dire(c.hors_dossier
+    ? '<b>Pas d\'aperçu vidéo.</b> Le fichier source existe mais il est rangé hors des '
+      + 'dossiers que le serveur accepte de lire. Déplace-le dans <b>rushes/</b>.'
+    : '<b>Pas d\'aperçu vidéo.</b> Ce projet est un remontage : ses plans viennent de '
+      + 'plusieurs fichiers, il faut le rendre une fois pour le voir.');
+
+  RENDU = !!(c.video && c.video.startsWith('sorties/'));
+  /* Un film plus vieux que la recette ne montre plus ce qu'elle dit. Eric a
+     pose une transition, regarde l'apercu, et vu le montage de la veille : il
+     a conclu que l'outil n'avait rien fait. Un ecart entre ce qu'on affiche et
+     ce qu'on a ecrit doit se DIRE, il ne se devine pas. */
+  PERIME = c.perime || null;
+  if (PERIME && !silencieux){
+    const q = PERIME >= 60 ? Math.round(PERIME / 60) + ' h' : Math.round(PERIME) + ' min';
+    dire('<b>Le film affiché date d\'avant tes dernières demandes</b> (' + q + ' de retard). '
+       + 'Ce que tu viens de poser n\'est pas dedans. Clique <b>Rendre la vidéo</b> pour le voir.');
+  }
+  if (!silencieux){ SEL = -1; ZOOM = 1 }
+  const garde = silencieux ? T : 0;
+  IMG = {...IMG_DEFAUT, ...(BP.image || {})};
+  peupler(); frise(silencieux); majStyle(); majImage(); ALLER(Math.min(garde, TOTAL));
+  listerRushes();
+  charger_onde();
+  if (!silencieux) prevenir_bandeau();
+}
+
+/* Deux jeux de sous-titres sur la meme image : les notres, et ceux DEJA CUITS
+   dans le rush, dans leur boite noire. On sait les trouver (bandeau.py les
+   mesure), mais on ne les couvre pas tout seul : la bande n'est presente que
+   sur la moitie des images d'un rush typique, et poser un rectangle noir sur
+   une mesure comme celle-la, c'est risquer de masquer l'image. On le dit, on
+   montre OU, et le bouton fait le reste. */
+async function prevenir_bandeau(){
+  // Le masque peut etre pose PAR PLAN sur un remontage : sans ce test,
+  // la page reclamait encore de couvrir une bande deja couverte.
+  if (BP.masque || (BP.plans || []).some(p => p.masque)) return;
+  const pour = NOM;
+  let d;
+  try { d = await (await fetch('/api/bandeau/' + encodeURIComponent(pour))).json() }
+  catch(e){ return }
+  if (pour !== NOM || !d.trouve) return;
+  dire('<b>Ce rush porte déjà des sous-titres cuits dans l’image.</b> '
+     + 'Une bande de ' + Math.round(d.haut * 100) + ' % à ' + Math.round(d.bas * 100)
+     + ' % de la hauteur, présente sur ' + Math.round(d.presence * 100) + ' % des images. '
+     + 'Sans rien faire, le rendu en montrera deux jeux : les tiens par-dessus les siens.'
+     + '<div class="rgls"><span class="rgl"><b>couvrir la bande</b>'
+     + '<button data-p="masque les sous-titres">faire</button></span></div>', 'rien');
+}
+
+/* L'onde du son. Elle se demande UNE fois par projet : le serveur la calcule
+   avec ffmpeg et la garde en cache a cote de la recette. Elle n'est jamais
+   bloquante — la frise s'affiche sans, puis se redessine quand elle arrive. */
+let ONDE = null;
+async function charger_onde(){
+  ONDE = null; onde();
+  const pour = NOM;
+  try {
+    const d = await (await fetch('/api/onde/' + encodeURIComponent(pour))).json();
+    if (pour !== NOM) return;          // Eric a change de projet entre-temps
+    ONDE = d; onde();
+  } catch(e){ /* pas d'onde : la piste le dit, elle ne ment pas */ }
+}
+
+/* --------------------------------------------------------------- reglages */
+function peupler(){
+  actif('#chFond', ST.boite || '');
+  actif('#chCouleur', ST.couleur);
+  actif('#chMaj', ST.majuscules ? '1' : '0');
+  actif('#chContour', ST.contour ? '3' : '0');
+  const tr = BP.transition || {};
+  actif('#chTrans', tr.type === 'fondu' ? String(tr.duree || 0.2) : '0');
+  $('#rTaille').value = ST.taille_pct;  $('#vTaille').textContent = fr(ST.taille_pct) + ' %';
+  $('#rHaut').value   = ST.hauteur_pct; $('#vHaut').textContent   = Math.round(ST.hauteur_pct) + ' %';
+  $('#rLarge').value  = ST.largeur_pct; $('#vLarge').textContent  = Math.round(ST.largeur_pct) + ' %';
+  $('#rMots').value   = ST.mots_max;    $('#vMots').textContent   = ST.mots_max;
+}
+/* Les memes reglages qu'au rendu, traduits en CSS. contrast/brightness/saturate
+   tombent un pour un sur le filtre eq de ffmpeg. La chaleur et la vignette sont
+   approchees par deux calques : c'est dit dans le panneau. */
+/* Sur un remontage, chaque plan porte SON masque : les rushes n'ont pas leur
+   bande a la meme hauteur. Les deux curseurs doivent alors agir sur le plan
+   selectionne, pas sur un reglage global — un reglage global recouvrirait les
+   plans laisses nus, dont les cartons qu'on fabrique nous-memes. */
+function masquesParPlan(){ return (BP.plans || []).some(p => p.masque) }
+
+function masqueActif(){
+  // Un plan choisi sans bande detectee garde ses curseurs : la recherche rate
+  // parfois un rush, et sans ca il n'y aurait plus aucun moyen de le couvrir.
+  if (masquesParPlan()) return SEL >= 0 ? ((BP.plans[SEL] || {}).masque || {}) : null;
+  return BP.masque || {};
+}
+
+function majImage(){
+  const c = $('#cadre').style;
+  c.setProperty('--i-c', IMG.contraste);
+  c.setProperty('--i-l', 1 + Number(IMG.luminosite));
+  c.setProperty('--i-s', IMG.saturation);
+  c.setProperty('--i-v', (IMG.vignette * 0.72).toFixed(3));
+  const ch = Number(IMG.chaleur);
+  c.setProperty('--i-teinte', Math.abs(ch) < 0.02 ? 'transparent'
+    : (ch > 0 ? `rgba(255,168,84,${(ch*0.55).toFixed(3)})`
+              : `rgba(90,150,255,${(-ch*0.55).toFixed(3)})`));
+  const f = (k, n, u) => { const e = $(k); if (e) e.textContent = Number(IMG[n]).toFixed(u) };
+  f('#vC','contraste',2); f('#vS','saturation',2); f('#vL','luminosite',2);
+  f('#vCh','chaleur',2); f('#vV','vignette',2); f('#vN','nettete',2);
+  const g = (k, n) => { const e = $(k); if (e) e.value = IMG[n] };
+  g('#rC','contraste'); g('#rS','saturation'); g('#rL','luminosite');
+  g('#rCh','chaleur'); g('#rV','vignette'); g('#rN','nettete');
+  actif('#chSfx', (BP.effets || {}).genre || '');
+  const ma = masqueActif(), mq = ma || {};
+  actif('#chMasque', mq.mode || '');
+  const aideM = $('#aideMasque');
+  if (aideM){
+    if (masquesParPlan() && !ma)
+      aideM.textContent = 'Ce montage mélange plusieurs rushes : chaque plan porte '
+        + 'sa propre bande. Choisis un plan dans la frise pour la corriger.';
+    else if (masquesParPlan())
+      aideM.textContent = ((BP.plans[SEL] || {}).masque
+        ? 'Les deux curseurs corrigent la bande du plan '
+        : 'Aucune bande trouvée sur le plan ')
+        + ((BP.plans[SEL] || {}).n || SEL + 1)
+        + ((BP.plans[SEL] || {}).masque
+           ? ' seulement. Les autres plans gardent la leur.'
+           : ' : les curseurs en posent une à la main, sur ce plan seulement.');
+    else
+      aideM.innerHTML = '« Masque les sous-titres » cherche la bande toute seule. '
+        + 'Elle se trompe parfois&nbsp;: vérifie sur l\'aperçu et corrige avec les deux curseurs.';
+  }
+  [$('#rMH'), $('#rME')].forEach(e => { if (e) e.disabled = masquesParPlan() && !ma });
+  const el = $('#masque');
+  el.className = mq.hauteur ? (mq.mode === 'flou' ? 'flou' : 'boite') : '';
+  const c2 = $('#cadre').style;
+  c2.setProperty('--m-haut', ((mq.haut || 0.78) * 100).toFixed(2) + '%');
+  c2.setProperty('--m-h', ((mq.hauteur || 0.07) * 100).toFixed(2) + '%');
+  const mh = $('#rMH'), me = $('#rME');
+  if (mh){ mh.value = ((mq.haut || 0.78) * 100).toFixed(1);
+           $('#vMH').textContent = mh.value + ' %' }
+  if (me){ me.value = ((mq.hauteur || 0.07) * 100).toFixed(1);
+           $('#vME').textContent = me.value + ' %' }
+}
+
+function listerRushes(){
+  const el = $('#rushes'); if (!el || !ETAT) return;
+  el.innerHTML = ETAT.rushes.map(r =>
+    `<div class="rush"><span title="${r.nom}">${r.nom}<br><em>${r.poids_mo} Mo</em></span>`
+    + (r.analyse ? `<em>déjà fait</em>`
+                 : `<button data-c="${r.chemin}">Générer les sous-titres</button>`)
+    + `</div>`).join('') || '<p class="aide">Aucune vidéo dans rushes/.</p>';
+}
+$('#rushes') && $('#rushes').addEventListener('click', async e => {
+  const b = e.target.closest('button[data-c]'); if (!b) return;
+  analyser(b.dataset.c, b);
+});
+
+/* Le decoupage en plans puis la transcription. Sortie du gestionnaire de clic
+   parce que le DEPOT doit l'appeler aussi : sans ca, deposer une video aurait
+   laisse Eric chercher un bouton dans un panneau cache. */
+async function analyser(chemin, b){
+  const etat = t => { if (b){ b.disabled = true; b.textContent = t } };
+  etat('en cours…');
+  const r = await (await fetch('/api/analyser', {method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({chemin})})).json();
+  if (r.erreur){ dire('Impossible : ' + esc(r.erreur), 'rien');
+                 if (b) b.disabled = false; return }
+  dire('<b>Génération lancée.</b> Découpage en plans puis transcription mot à mot, '
+     + 'en local. Une minute de vidéo prend environ une minute.');
+  const suivre = setInterval(async () => {
+    const t = await (await fetch('/api/tache/' + r.tache)).json();
+    const derniere = (t.lignes || []).slice(-1)[0];
+    if (b) b.textContent = derniere?.slice(0, 22) || 'en cours…';
+    // Le rendu jetait deja `t.lignes` : une attente de plusieurs minutes sans
+    // un mot se lit comme un gel. On les montre, ici comme ailleurs.
+    if (derniere) etatDire(derniere);
+    if (t.etat === 'en cours') return;
+    clearInterval(suivre);
+    if (t.etat === 'fini'){
+      dire('<b>Sous-titres générés.</b> Le projet « ' + esc(t.resultat.projet) + ' » est prêt.', 'fait');
+      ETAT = await (await fetch('/api/etat')).json(); catalogue(ETAT);
+      const sel = $('#selProjet');
+      sel.innerHTML = ETAT.projets.map(p =>
+        `<option value="${esc(p.nom)}">${esc(p.nom)} — ${p.n_plans} plans, ${fr(p.duree)} s</option>`).join('');
+      NOM = t.resultat.projet; sel.value = NOM;
+      localStorage.setItem('monteur.projet', NOM);
+      $('#fil').innerHTML = ''; await charger(); await histoire();
+    } else {
+      dire('<b>La génération a échoué.</b><br>' + (t.lignes || []).slice(-4).join('<br>'), 'rien');
+      if (b){ b.disabled = false; b.textContent = 'Générer les sous-titres' }
+    }
+  }, 2000);
+}
+
+/* ------------------------------------------------------------- le depot */
+/* Il n'existait AUCUN moyen d'entrer une video par la page : ni glisser
+   deposer, ni selecteur de fichier, ni route serveur. Il fallait ouvrir le
+   Finder, poser le fichier dans un dossier qu'on doit connaitre, revenir et
+   RECHARGER. C'etait le seul geste du montage qui vivait hors de l'outil. */
+let ENVOI_EN_COURS = false;
+let DERNIER_ETAT = '';
+
+function etatDire(txt){
+  if (txt === DERNIER_ETAT) return;   // ne pas repeter la meme ligne 30 fois
+  DERNIER_ETAT = txt;
+  const p = $('#etatDepot'); if (p) p.textContent = txt;
+}
+
+function avancement(part){
+  document.body.classList.add('envoie');
+  $('#envoi').firstElementChild.style.width = Math.round(part * 100) + '%';
+}
+
+async function deposer(fichier){
+  if (!fichier || ENVOI_EN_COURS) return;
+  const ok = /\.(mp4|mov|m4v|webm)$/i.test(fichier.name);
+  if (!ok){
+    dire('Je ne sais lire que du <b>mp4, mov, m4v ou webm</b>. '
+       + '« ' + esc(fichier.name) +' » n\'en est pas.', 'rien');
+    return;
+  }
+  ENVOI_EN_COURS = true;
+  const mo = (fichier.size / 1048576).toFixed(1).replace('.', ',');
+  dire('<b>' + esc(fichier.name) + '</b> — ' + mo + ' Mo. Je l\'envoie…');
+  try {
+    // XHR et pas fetch : lui seul rend l'avancement de l'ENVOI. Sur un rush
+    // de 800 Mo, une barre morte se lit comme un plantage.
+    const rep = await new Promise((res, rej) => {
+      const x = new XMLHttpRequest();
+      x.open('POST', '/api/deposer');
+      x.setRequestHeader('X-Nom', encodeURIComponent(fichier.name));
+      x.upload.onprogress = e => e.lengthComputable && avancement(e.loaded / e.total);
+      x.onload = () => { try { res(JSON.parse(x.responseText)) } catch(_){ rej(new Error('reponse illisible')) } };
+      x.onerror = () => rej(new Error('envoi interrompu'));
+      x.send(fichier);
+    });
+    if (!rep.ok){ dire('Impossible : ' + esc(rep.erreur || 'refusé'), 'rien'); return }
+    const format = (rep.largeur && rep.hauteur)
+      ? rep.largeur + '×' + rep.hauteur
+        + (Math.abs(rep.largeur / rep.hauteur - 9 / 16) < .01 ? ' (déjà au format)' : '')
+      : '';
+    dire('<b>Vidéo rangée</b> sous « ' + esc(rep.nom) + ' »' + (format ? ', ' + format : '')
+       + '.<br>Je la découpe en plans et je transcris la voix, en local. '
+       + 'Compte environ une minute par minute de vidéo. '
+       + '<span id="etatDepot" class="aide"></span>');
+    ETAT = await (await fetch('/api/etat')).json(); catalogue(ETAT);   // sans recharger la page
+    listerRushes();
+    await analyser(rep.chemin, null);
+  } catch (e){
+    dire('Impossible : ' + esc(e.message || e), 'rien');
+  } finally {
+    ENVOI_EN_COURS = false;
+    document.body.classList.remove('envoie');
+    $('#envoi').firstElementChild.style.width = '0';
+  }
+}
+
+/* La cible est la page ENTIERE. dragenter et dragleave se declenchent aussi
+   en passant d'un enfant a l'autre : on compte les entrees, sinon le voile
+   clignote des qu'on survole un bouton. */
+let COMPTE_GLISSE = 0;
+const porteUnFichier = e =>
+  Array.from(e.dataTransfer?.types || []).includes('Files');
+
+addEventListener('dragenter', e => {
+  if (!porteUnFichier(e)) return;
+  e.preventDefault(); COMPTE_GLISSE++;
+  document.body.classList.add('depose');
+});
+addEventListener('dragover', e => { if (porteUnFichier(e)) e.preventDefault() });
+addEventListener('dragleave', e => {
+  if (!porteUnFichier(e)) return;
+  COMPTE_GLISSE = Math.max(0, COMPTE_GLISSE - 1);
+  if (!COMPTE_GLISSE) document.body.classList.remove('depose');
+});
+addEventListener('drop', e => {
+  if (!porteUnFichier(e)) return;
+  e.preventDefault(); COMPTE_GLISSE = 0;
+  document.body.classList.remove('depose');
+  const fs = Array.from(e.dataTransfer.files || []);
+  if (fs.length > 1)
+    dire('Tu m\'en as lâché ' + fs.length + '. Je prends le premier, '
+       + '« ' + esc(fs[0].name) + ' » : un montage part d\'une vidéo.');
+  deposer(fs[0]);
+});
+
+/* Le selecteur de fichier n'est pas une roue de secours : au telephone, le
+   glisser deposer n'existe pas, c'est le SEUL chemin. */
+$('#bDeposer').onclick = () => $('#fDepot').click();
+$('#zDepot').onclick = () => $('#fDepot').click();
+$('#zDepot').onkeydown = e => {
+  // un element qui a l'air d'un bouton doit en etre un, clavier compris
+  if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); $('#fDepot').click() }
+};
+$('#bVideDepot').onclick = () => $('#fDepot').click();
+$('#fDepot').onchange = e => { deposer(e.target.files[0]); e.target.value = '' };
+
+function reglageImage(k, v){ IMG[k] = v; BP.image = {...IMG}; majImage() }
+
+function actif(sel, v){
+  document.querySelectorAll(sel + ' button').forEach(b =>
+    b.classList.toggle('on', b.dataset.v === String(v)));
+}
+
+/* Les memes reglages que le rendu, traduits en CSS. Les marges de la boite
+   reprennent celles de png_sous_titre : 0,42 em de cote, 0,55 et 0,35 fois
+   cette marge en haut et en bas. */
+function majStyle(){
+  const c = $('#cadre').style;
+  c.setProperty('--st-taille',  ST.taille_pct + 'cqh');
+  c.setProperty('--st-haut',    ST.hauteur_pct + '%');
+  c.setProperty('--st-largeur', ST.largeur_pct + '%');
+  c.setProperty('--st-couleur', ST.boite ? (ST.boite_texte || '#111') : ST.couleur);
+  c.setProperty('--st-maj',     ST.majuscules ? 'uppercase' : 'none');
+  c.setProperty('--st-fond',    ST.boite || 'transparent');
+  c.setProperty('--st-fond-texte', ST.boite ? (ST.boite_texte || '#111') : 'inherit');
+  c.setProperty('--st-pad',     ST.boite ? '.23em .42em .15em' : '0');
+  c.setProperty('--st-ombre',   ST.boite ? 'none'
+    : (ST.contour ? '0 0 .04em #000,.03em .03em .04em #000,-.03em .03em .04em #000,.03em -.03em .04em #000,-.03em -.03em .04em #000'
+                  : '0 .06em .1em rgba(0,0,0,.62)'));
+}
+
+function reglage(k, v){ ST[k] = v; majStyle(); peupler() }
+
+document.querySelectorAll('.choix').forEach(g => g.onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const v = b.dataset.v, id = g.id;
+  // Ces quatre groupes ne partaient jamais au serveur : le style revenait au
+  // blanc bas-de-casse a la phrase suivante, sans un mot.
+  if (id === 'chFond')   { reglage('boite', v || null);            enregistrer(true); return }
+  if (id === 'chCouleur'){ reglage('couleur', v);                  enregistrer(true); return }
+  if (id === 'chMaj')    { reglage('majuscules', v === '1');       enregistrer(true); return }
+  if (id === 'chContour'){ reglage('contour', parseInt(v, 10));    enregistrer(true); return }
+  if (id === 'chLook'){ demander({neutre:"remets l'image a plat", punchy:"rends l'image punchy",
+      cinema:"mets un rendu cinema", doux:"mets un rendu doux"}[v]); return }
+  if (id === 'chSfx'){ demander(v ? 'mets un ' + v + ' sur les coupes'
+                                  : 'enleve les bruits'); return }
+  if (id === 'chMasque'){
+    if (!v){ demander('enleve le masque'); return }
+    // Boite ou flou est un choix de RENDU, pas de position : il vaut pour tout
+    // le film, donc il change le mode de chaque masque de plan d'un coup.
+    if (masquesParPlan()){
+      BP.plans.forEach(p => { if (p.masque) p.masque = {...p.masque, mode: v} });
+      majImage(); enregistrer(true); return;
+    }
+    // si la bande n'a jamais ete cherchee, on la cherche ; sinon on change le mode
+    if (!(BP.masque || {}).hauteur){ demander('masque les sous-titres' + (v === 'flou' ? ' en flou' : '')); return }
+    BP.masque = {...BP.masque, mode: v}; majImage(); enregistrer(true); return;
+  }
+  if (id === 'chTrans'){
+    const d = parseFloat(v);
+    BP.transition = d ? {type:'fondu', duree:d} : {type:'coupe'};
+    peupler();
+    enregistrer(true).then(() => dire(d
+      ? '<b>Fondu de ' + fr(d) + ' s</b> entre les plans. Visible au prochain rendu.'
+      : '<b>Coupes franches.</b> Visible au prochain rendu.', true));
+  }
+});
+$('#rTaille').oninput = e => reglage('taille_pct',  parseFloat(e.target.value));
+$('#rHaut').oninput   = e => reglage('hauteur_pct', parseFloat(e.target.value));
+$('#rLarge').oninput  = e => reglage('largeur_pct', parseFloat(e.target.value));
+// sans ces trois lignes, bouger un curseur ne survivait pas a la phrase suivante
+$('#rTaille').onchange = () => enregistrer(true);
+$('#rHaut').onchange   = () => enregistrer(true);
+$('#rLarge').onchange  = () => enregistrer(true);
+$('#rMots').oninput   = e => { ST.mots_max = parseInt(e.target.value, 10); peupler() };
+$('#rMots').onchange  = () => enregistrer(true);
+[['#rMH','haut'],['#rME','hauteur']].forEach(([sel, k]) => {
+  const e = $(sel); if (!e) return;
+  e.oninput = ev => {
+    const v = parseFloat(ev.target.value) / 100;
+    if (masquesParPlan()){
+      const p = BP.plans[SEL];
+      if (!p) return;                          // sans plan choisi, on n'ecrit rien
+      p.masque = {haut: 0.78, hauteur: 0.07, mode: 'boite', couleur: 'black',
+                  ...(p.masque || {}), [k]: v};
+    } else {
+      BP.masque = {...(BP.masque || {mode:'boite', couleur:'black'}), [k]: v};
+      if (!BP.masque.mode) BP.masque.mode = 'boite';
+    }
+    majImage();
+  };
+  e.onchange = () => enregistrer(true);
+});
+[['#rC','contraste'],['#rS','saturation'],['#rL','luminosite'],
+ ['#rCh','chaleur'],['#rV','vignette'],['#rN','nettete']].forEach(([sel, k]) => {
+  const e = $(sel); if (!e) return;
+  e.oninput  = ev => reglageImage(k, parseFloat(ev.target.value));
+  e.onchange = () => enregistrer(true);
+});
+
+/* Les noms courts affiches dans la frise. Ils doivent tenir dans une pastille
+   de quelques pixels : on ecrit le nom du montage, pas celui du filtre. */
+const TR = {fondu:'fondu', fondu_noir:'NOIR', flash:'FLASH', whip:'WHIP',
+  glisse_gauche:'←', glisse_droite:'→', glisse_haut:'↑', glisse_bas:'↓',
+  balayage:'volet', zoom:'ZOOM', pixel:'pixel', cercle:'cercle',
+  dissous:'dissous', radial:'radial', gris:'gris', ecrase:'écrase', etire:'étire'};
+const TR_LONG = {fondu:'fondu enchaîné', fondu_noir:'fondu au noir',
+  flash:'flash blanc', whip:'whip', glisse_gauche:'glisse vers la gauche',
+  glisse_droite:'glisse vers la droite', glisse_haut:'glisse vers le haut',
+  glisse_bas:'glisse vers le bas', balayage:'balayage', zoom:'zoom avant',
+  pixel:'pixelisation', cercle:'ouverture en cercle', dissous:'dissolution',
+  radial:'balayage radial', gris:'passage par le gris', ecrase:'écrasement',
+  etire:'étirement'};
+const MVT = {punch:'⤡', recul:'⤢', zoom:'⊕', derive:'↔', secousse:'≈'};
+/* L'invite du champ de dictee fait quatre lignes. Au telephone le champ en
+   montre trois, et la quatrieme etait coupee EN PLEIN MILIEU d'une lettre :
+   une phrase tronquee se lit comme un bug, pas comme un exemple. On en garde
+   une courte, qui tient. Elle n'est posee que si le champ est vide et n'a pas
+   deja recu une invite calee sur un plan. */
+const INVITE = {
+  large: 'Dis ce que tu veux. « monte-moi une pub de 30 secondes », « dynamise le montage », « annule », « rends la vidéo »…',
+  etroite: 'Dis ce que tu veux. « dynamise le montage », « rends la vidéo »…'
+};
+function calerInvite(){
+  const t = document.querySelector('#txtDemande');
+  if (!t || t.value) return;
+  const voulue = innerWidth <= 760 ? INVITE.etroite : INVITE.large;
+  if (t.placeholder === INVITE.large || t.placeholder === INVITE.etroite)
+    t.placeholder = voulue;
+}
+addEventListener('resize', calerInvite);
+addEventListener('DOMContentLoaded', calerInvite);
+calerInvite();
+
+/* Les deux tables ci-dessus sont le SECOURS, pas la source. Le moteur en
+   connait 58 ; celles-ci s'arretaient a 17, et une transition absente d'ici
+   s'affichait « undefined » dans la frise. `/api/etat` sert le catalogue du
+   moteur, et on l'y verse des qu'il arrive. */
+function catalogue(etat){
+  const c = etat && etat.transitions; if (!c) return;
+  for (const [k, v] of Object.entries(c)){
+    if (v.court) TR[k] = v.court;
+    if (v.long)  TR_LONG[k] = v.long;
+  }
+}
+const MVT_LONG = {punch:'zoom avant progressif', recul:'zoom arrière progressif',
+  zoom:'zoom fixe', derive:'dérive lente', secousse:'tremblement'};
+
+/* ------------------------------------------------------------------ frise */
+let ZOOM = 1, SEL = -1, RENDU = false, PERIME = null;
+const PXPS = 26;                       // px par seconde a zoom 1
+/* Un nom de fichier n'est pas une identite, et il n'est pas du HTML non plus.
+   Sans les guillemets, « ESSAI "PIEGE onmouseover=1 » fabriquait un attribut
+   d'evenement ET faisait afficher un menu vide pendant que la page ecrivait
+   ailleurs. C'est le pire mode de panne ici : on croit editer A, on edite B. */
+const esc = t => String(t ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;')
+  .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+
+const largeur = () => Math.max(640, TOTAL * PXPS * ZOOM);
+const xDe = t => t / TOTAL * largeur();
+const tDe = x => x / largeur() * TOTAL;
+
+/* La regle : etiquettes chiffrees espacees d'au moins 64 px, points en
+   subdivision. Sous la minute on lit en secondes, au-dela en m:ss. */
+function regle(){
+  const el = $('#regle'); el.innerHTML = '';
+  const pas = [0.5,1,2,5,10,15,30,60,120].find(x => xDe(x) >= 64) || 120;
+  for (let t = 0; t <= TOTAL + 1e-6; t += pas){
+    const sp = document.createElement('span');
+    sp.style.left = xDe(t) + 'px';
+    sp.textContent = TOTAL >= 60
+      ? Math.floor(t/60) + ':' + String(Math.floor(t%60)).padStart(2,'0')
+      : (pas < 1 ? fr(t) : Math.round(t)) + ' s';
+    el.appendChild(sp);
+    for (let k = 1; k < 4; k++){
+      const u = t + pas * k / 4; if (u > TOTAL) break;
+      const d = document.createElement('i'); d.style.left = xDe(u) + 'px'; el.appendChild(d);
+    }
+  }
+}
+
+/* L'onde du son, dessinee PLAN PAR PLAN. Les pics sont horodates sur la
+   source, comme les mots : un plan rogne dedans et ne joue pas au meme endroit
+   du montage. On prend le MAXIMUM des pics couverts par chaque pixel — la
+   moyenne effacerait les attaques, et une attaque est exactement ce qu'on
+   cherche a caler sur une coupe. */
+function onde(){
+  const cv = $('#onde'), pi = $('#pisteSon');
+  if (!cv || !TOTAL) return;
+  const L = largeur(), H = pi.clientHeight || 34;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = Math.round(L * dpr); cv.height = Math.round(H * dpr);
+  cv.style.width = L + 'px'; cv.style.height = H + 'px';
+  const g = cv.getContext('2d');
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, L, H);
+
+  const pics = (ONDE && ONDE.pics) || [];
+  pi.classList.toggle('muet', !pics.length);
+  pi.dataset.vide = !ONDE ? 'je lis le son…'
+                          : (ONDE.pourquoi || 'pas de son mesurable sur ce rush');
+  if (!pics.length) return;
+
+  const pas = ONDE.pas || 0.02, mid = H / 2, plein = H / 2 - 2;
+  // La hauteur d'une barre se lit en DECIBELS, pas en amplitude brute. De la
+  // parole tient autour de -20 dBFS, soit 0,1 en lineaire : dessinee telle
+  // quelle, l'onde etait un trait plat de 10 % de haut et ne servait a rien.
+  // Plancher a -40 dB, puissance 1,5 pour garder le haut aux vrais pics.
+  // La courbe vient d'OpenCut (opencut-classic, MIT, timeline/audio-display.ts).
+  const barre = a => {
+    if (a <= 0) return 0;
+    const db = 20 * Math.log10(a);
+    if (db <= -40) return 0;
+    return Math.min(1, Math.pow((db + 40) / 40, 1.5));
+  };
+  BORNES.forEach(([d, f, p], k) => {
+    const e0 = entree(p);
+    const xa = Math.max(0, Math.floor(xDe(d))), xb = Math.ceil(xDe(f));
+    g.fillStyle = (k === SEL) ? '#4a7a2a' : '#a9a8a5';
+    for (let x = xa; x < xb; x++){
+      const s0 = e0 + (Math.max(d, tDe(x)) - d);
+      const s1 = e0 + (Math.min(f, tDe(x + 1)) - d);
+      const i0 = Math.max(0, Math.floor(s0 / pas));
+      const i1 = Math.min(pics.length - 1, Math.max(i0, Math.ceil(s1 / pas) - 1));
+      let m = 0;
+      for (let i = i0; i <= i1; i++) if (pics[i] > m) m = pics[i];
+      const h = Math.max(0.5, barre(m) * plein);
+      g.fillRect(x, mid - h, 1, h * 2);
+    }
+    // Le trait de coupe sur l'onde : c'est la seule facon de VOIR qu'une
+    // coupe tombe en pleine syllabe.
+    if (k < BORNES.length - 1){
+      g.fillStyle = 'rgba(12,10,9,.20)';
+      g.fillRect(Math.round(xDe(f)), 0, 1, H);
+    }
+  });
+}
+
+function frise(silencieux){
+  $('#dedans').style.width = largeur() + 'px';
+  regle();
+  const pi = $('#pisteImage'), pt = $('#pisteTexte'), pc = $('#pisteCoupes');
+  pi.innerHTML = ''; pt.innerHTML = ''; pc.innerHTML = '';
+
+  BORNES.forEach(([d, f, p], i) => {
+    const el = document.createElement('div');
+    el.className = 'bloc-plan' + (i === SEL ? ' sel' : '');
+    el.dataset.i = i;
+    const w = xDe(f) - xDe(d);
+    el.style.left = xDe(d) + 'px';
+    el.style.width = Math.max(3, w - 2) + 'px';
+    // sous 10 s on affiche les decimales, au-dela l'entier suffit
+    const dur = (f - d) < 10 ? fr(f - d) + 's' : Math.round(f - d) + 's';
+    // Un numero tronque se lit « 1 » a la place de « 19 » : mieux vaut RIEN
+    // qu'un numero faux, puisque le numero sert a designer le plan dans le chat.
+    const num = String(p.n || i + 1);
+    const place = w - 8 >= num.length * 7;
+    const mv = p.mouvement || null;
+    el.innerHTML = (place ? '<em>' + num + '</em>' : '')
+                 + (w > 46 ? '<u>' + dur + '</u>' : '')
+                 + (mv ? (w > 62
+                          ? '<i class="mvt">' + esc(MVT[mv.type] || mv.type) + '</i>'
+                          : '<i class="mvt pt"></i>') : '');
+    el.title = 'plan ' + num + ' — ' + fr(f - d) + ' s'
+             + (mv ? ' — ' + (MVT_LONG[mv.type] || mv.type)
+                     + ' ' + Math.round((mv.force || 0) * 100) + ' %' : '')
+             + ((p.vision && p.vision.sujet) ? ' — ' + p.vision.sujet : '')
+             + ((p.paroles) ? ' — « ' + p.paroles + ' »' : '');
+    el.onclick = e => { if (!e.target.classList.contains('poignee')) choisir(i) };
+    // Le clic droit ouvre le menu sur N'IMPORTE quel plan, choisi ou non :
+    // devoir selectionner d'abord ajoute un geste pour rien.
+    el.oncontextmenu = e => { e.preventDefault(); choisir(i); menu(i, e.clientX, e.clientY) };
+    if (i === SEL) for (const cote of ['g', 'd']){
+      const h = document.createElement('div');
+      h.className = 'poignee ' + cote;
+      h.title = cote === 'g' ? 'entrer plus tard dans le plan' : 'rallonger ou raccourcir le plan';
+      h.onpointerdown = ev => tirer(ev, i, cote);
+      el.appendChild(h);
+    }
+    // Au doigt il n'y a pas de clic droit : le plan choisi porte sa poignee.
+    if (i === SEL && w > 30){
+      const b = document.createElement('b');
+      b.className = 'plus'; b.textContent = '⋯';
+      b.title = 'que faire de ce plan (M)';
+      b.onclick = ev => { ev.stopPropagation();
+        const r = ev.target.getBoundingClientRect(); menu(i, r.left, r.top) };
+      el.appendChild(b);
+    }
+    pi.appendChild(el);
+
+    // La transition SORT de ce plan : elle se pose sur la coupe qui suit.
+    const so = p.sortie && p.sortie.type && p.sortie.type !== 'coupe' ? p.sortie : null;
+    if (so && i < BORNES.length - 1){
+      const c2 = document.createElement('div');
+      c2.className = 'coupe';
+      c2.style.left = xDe(f) + 'px';
+      c2.innerHTML = '<b>' + esc(TR[so.type] || so.type) + '</b>';
+      c2.title = 'coupe ' + num + '→' + (i + 2) + ' : ' + (TR_LONG[so.type] || so.type)
+               + (so.duree ? ', ' + fr(so.duree) + ' s' : '');
+      pc.appendChild(c2);
+    }
+  });
+
+  CARTES.forEach((c, i) => {
+    const el = document.createElement('div');
+    el.className = 'bloc-st'; el.dataset.i = i;
+    // a cheval : la carte traverse une coupe, l'image change au milieu de la
+    // phrase. C'est exactement le defaut d'alignement image / texte a reperer.
+    if (BORNES.some(([, f]) => c.d < f - 0.02 && c.f > f + 0.02)) el.classList.add('cheval');
+    el.style.left = xDe(c.d) + 'px';
+    el.style.width = Math.max(3, xDe(c.f) - xDe(c.d) - 2) + 'px';
+    el.textContent = c.texte; el.title = c.texte;
+    el.onclick = () => ALLER(c.d + 0.02);
+    pt.appendChild(el);
+  });
+
+  onde();
+
+  const n = pt.querySelectorAll('.cheval').length;
+  if (n && !silencieux) dire('<b>' + n + ' sous-titre' + (n > 1 ? 's' : '') + ' à cheval sur une coupe.</b> '
+    + 'L\'image change au milieu de la phrase — cerclés d\'orange dans la frise.');
+}
+
+function choisir(i){
+  SEL = i; frise();
+  const [d, f, p] = BORNES[i];
+  $('#selInfo').innerHTML = 'plan <b>' + (p.n || i + 1) + '</b> · ' + fr(d) + '–' + fr(f)
+    + ' s · durée <b>' + fr(f - d) + ' s</b>'
+    + (p.vision && p.vision.role ? ' · ' + p.vision.role : '');
+  // la correction se donne au timecode : la demande est deja amorcee
+  $('#txtDemande').placeholder = 'À ' + fr(d) + ' s (plan ' + (p.n || i + 1) + ') : …';
+  ALLER(d + 0.02);
+}
+
+/* Rogner un plan, c'est deplacer son point d'entree ou sa duree dans la SOURCE.
+   Rien n'est recalcule ailleurs : les mots restent horodates sur la source, et
+   le decoupage des cartes les reclipe tout seul au prochain calcul. */
+/* Caler le bord sur quelque chose de vrai. Un plan qui finit au milieu d'un
+   mot s'entend tout de suite, et c'est le defaut le plus frequent d'un montage
+   rapide. Les mots sont horodates sur la SOURCE : on cale donc dans le temps
+   de la source, jamais dans celui du montage.
+   Le principe du calage vient d'OpenCut (timeline/playhead-snap-source.ts,
+   MIT). Les cibles, elles, sont les notres : nous savons ou sont les mots. */
+function caler(nd, i, cote, entree0, d0){
+  const mots = (BP.plans[i].mots) || [];
+  const tol = tDe(7);                      // 7 px a l'ecran, quel que soit le zoom
+  const vise = cote === 'd' ? entree0 + nd : entree0 + (d0 - nd);
+  let mieux = null;
+  const essayer = (s, quoi) => {
+    const e = Math.abs(s - vise);
+    if (e <= tol && (!mieux || e < mieux.e)) mieux = {s: s, e: e, quoi: quoi};
+  };
+  for (const w of mots){
+    essayer(+w.d, 'le début de « ' + w.m + ' »');
+    essayer(+w.f, 'la fin de « ' + w.m + ' »');
+  }
+  const [dd, ff] = BORNES[i];
+  if (T >= dd && T <= ff) essayer(entree0 + (T - dd), 'la tête de lecture');
+  if (!mieux) return {nd: nd, quoi: null};
+  const n2 = cote === 'd' ? mieux.s - entree0 : d0 - (mieux.s - entree0);
+  return n2 >= 0.12 ? {nd: n2, quoi: mieux.quoi} : {nd: nd, quoi: null};
+}
+
+function tirer(ev, i, cote){
+  ev.preventDefault(); ev.stopPropagation();
+  const p = BP.plans[i], x0 = ev.clientX, d0 = p.duree;
+  const el = ev.target.closest('.bloc-plan');
+  const gauche0 = parseFloat(el.style.left);
+  const entree0 = entree(p);
+  const calc = e => caler(
+    Math.max(0.12, cote === 'd' ? d0 + tDe(e.clientX - x0) : d0 - tDe(e.clientX - x0)),
+    i, cote, entree0, d0);
+  const bouge = e => {
+    const {nd, quoi} = calc(e);
+    if (cote === 'g') el.style.left = (gauche0 + xDe(d0 - nd)) + 'px';
+    el.style.width = Math.max(3, xDe(nd) - 2) + 'px';
+    $('#selInfo').innerHTML = 'plan <b>' + (p.n || i + 1) + '</b> — durée <b>' + fr(nd) + ' s</b>'
+      + ' <span style="color:var(--smoke)">(était ' + fr(d0) + ' s)</span>'
+      + (quoi ? ' <span style="color:var(--forest)">· calé sur ' + esc(quoi) + '</span>' : '');
+  };
+  const fini = async e => {
+    window.removeEventListener('pointermove', bouge);
+    window.removeEventListener('pointerup', fini);
+    const {nd, quoi} = calc(e);
+    if (Math.abs(nd - d0) < 0.02) return;
+    if (cote === 'g'){
+      const decal = d0 - nd;
+      if (p.src_debut !== undefined) p.src_debut = +(p.src_debut + decal).toFixed(3);
+      else p.debut = +((p.debut || 0) + decal).toFixed(3);
+    }
+    p.duree = +nd.toFixed(3);
+    if (p.fin !== undefined) p.fin = +((p.debut || 0) + p.duree).toFixed(3);
+    await enregistrer(true);
+    dire('Plan <b>' + (p.n || i + 1) + '</b> : ' + fr(d0) + ' s → <b>' + fr(p.duree) + ' s</b>'
+       + (quoi ? ', calé sur ' + esc(quoi) : '') + '.', 'fait');
+  };
+  window.addEventListener('pointermove', bouge);
+  window.addEventListener('pointerup', fini);
+}
+
+/* Zoomer sans perdre sa place. Le reflexe d'un banc de montage : ce qu'on
+   regarde reste sous les yeux et la fenetre se resserre autour. Sans cet
+   ancrage, chaque zoom ramenait au debut du film et il fallait re-chercher
+   l'endroit — le geste le plus frequent de la frise etait le plus penible. */
+function zoomer(mult, ancre){
+  const df = $('#defile');
+  const t = (ancre === undefined || ancre === null) ? T : ancre;
+  const dedans = xDe(t) - df.scrollLeft;
+  ZOOM = Math.max(.2, Math.min(24, ZOOM * mult));
+  frise();
+  df.scrollLeft = Math.max(0, xDe(t) - dedans);
+  peindre();
+}
+function ajuster(){
+  const df = $('#defile');
+  if (!TOTAL) return;
+  ZOOM = Math.max(.2, Math.min(24, (df.clientWidth - 26) / (TOTAL * PXPS)));
+  frise(); df.scrollLeft = 0; peindre();
+}
+$('#bPlus').onclick   = () => zoomer(1.6);
+$('#bMoins').onclick  = () => zoomer(1 / 1.6);
+$('#bAjuster').onclick = ajuster;
+
+/* La molette avec ⌘ ou Ctrl zoome sous le POINTEUR, comme une carte. Sans le
+   preventDefault le navigateur zoome la page entiere par-dessus. */
+$('#defile').addEventListener('wheel', e => {
+  if (!(e.metaKey || e.ctrlKey)) return;
+  e.preventDefault();
+  const r = $('#defile').getBoundingClientRect();
+  zoomer(e.deltaY < 0 ? 1.16 : 1 / 1.16,
+         tDe($('#defile').scrollLeft + (e.clientX - r.left)));
+}, {passive: false});
+
+/* La regle se TIRE, elle ne se clique pas seulement : on cherche un point du
+   film en balayant, pas en visant. offsetX est relatif a la CIBLE — cliquer
+   une etiquette renvoyait a zero, on mesure donc toujours sur la regle. */
+function scruter(e){
+  const r = $('#regle').getBoundingClientRect();
+  ALLER(tDe(e.clientX - r.left));
+}
+$('#regle').onpointerdown = e => {
+  e.preventDefault(); scruter(e);
+  const fin = () => { window.removeEventListener('pointermove', scruter);
+                      window.removeEventListener('pointerup', fin) };
+  window.addEventListener('pointermove', scruter);
+  window.addEventListener('pointerup', fin);
+};
+
+/* ------------------------------------------------------- le menu du plan */
+/* Ce que la frise sait faire sur UN plan, sans passer par une phrase. Chaque
+   bouton ecrit par le MEME chemin que les poignees : on modifie la recette,
+   on l'enregistre, le serveur en garde une sauvegarde. « Annuler » revient
+   dessus. La duree d'une transition n'est jamais ecrite ici — le moteur a la
+   sienne, et deux tables de durees finissent toujours par diverger. */
+/* Le menu reste COURT : le moteur en connait 58, mais un menu de 58 lignes
+   au clic droit ne se lit plus. On y met les quinze qui servent, et les
+   quarante-trois autres se demandent a la voix, par leur nom. */
+const TR_MENU = [['', 'aucune'], ['fondu', 'fondu'], ['fondu_rapide', 'fondu court'],
+  ['fondu_lent', 'fondu long'], ['fondu_noir', 'au noir'],
+  ['flash', 'flash'], ['whip', 'whip'], ['zoom', 'zoom'], ['dissous', 'dissous'],
+  ['glisse_gauche', 'glisse ←'], ['glisse_droite', 'glisse →'],
+  ['couvre_haut', 'recouvre ↑'], ['devoile_haut', 'dévoile ↑'],
+  ['balayage', 'volet'], ['cercle', 'cercle'], ['pixel', 'pixel']];
+const MV_MENU = [['', 'aucun'], ['punch', 'punch'], ['recul', 'recul'],
+  ['derive', 'dérive'], ['secousse', 'secousse'], ['zoom', 'zoom fixe']];
+const FORCE = {punch: .06, recul: .06, derive: .05, secousse: .04, zoom: .06};
+
+function fermerMenu(){ $('#menuPlan').classList.remove('on') }
+
+function menu(i, x, y){
+  const m = $('#menuPlan');
+  if (i < 0 || i >= BORNES.length) return;
+  const p = BORNES[i][2], num = p.n || i + 1;
+  const dernier = i === BORNES.length - 1;
+  const so = (p.sortie && p.sortie.type) ? p.sortie.type : '';
+  const mv = (p.mouvement && p.mouvement.type) ? p.mouvement.type : '';
+
+  const pastilles = (liste, actif, groupe) => '<div class="rangee">'
+    + liste.map(([v, lib]) => '<button data-g="' + groupe + '" data-v="' + esc(v) + '"'
+        + (v === actif ? ' class="on"' : '') + '>' + esc(lib) + '</button>').join('') + '</div>';
+
+  m.innerHTML =
+      '<div class="titre">plan ' + esc(String(num)) + ' · ' + fr(p.duree) + ' s'
+    + (p.vision && p.vision.role ? ' · ' + esc(p.vision.role) : '') + '</div>'
+    + '<div class="large">'
+    + '<button data-a="couper">✂ Couper à la tête de lecture <kbd>B</kbd></button>'
+    + '<button data-a="dupliquer">⧉ Dupliquer ce plan <kbd>D</kbd></button>'
+    + '<button data-a="isoler">⌕ Ne voir que ce plan</button>'
+    + '<button data-a="supprimer" class="danger">✕ Supprimer ce plan <kbd>⌫</kbd></button>'
+    + '</div>'
+    + '<h4>Transition en sortie</h4>'
+    + (dernier
+        ? '<p class="aide" style="padding:2px">Le plan ' + esc(String(num)) + ' est le dernier&nbsp;: '
+          + 'une transition à sa sortie n’a rien vers quoi enchaîner, le moteur l’ignore.</p>'
+        : pastilles(TR_MENU, so, 'tr'))
+    + '<h4>Mouvement de caméra</h4>'
+    + pastilles(MV_MENU, mv, 'mv');
+
+  m.querySelectorAll('button').forEach(b => b.onclick = () => {
+    fermerMenu();
+    if (b.dataset.a === 'couper'){ ALLER(BORNES[i][0] + p.duree / 2); couper() }
+    else if (b.dataset.a === 'dupliquer') dupliquer(i);
+    else if (b.dataset.a === 'supprimer') supprimer(i);
+    else if (b.dataset.a === 'isoler') isoler(i);
+    else if (b.dataset.g === 'tr') poser(i, 'sortie', b.dataset.v);
+    else if (b.dataset.g === 'mv') poser(i, 'mouvement', b.dataset.v);
+  });
+
+  // Ouvrir d'abord, mesurer ensuite : un menu cache n'a pas de dimensions, et
+  // il sortait par le bas de l'ecran sur les plans du bas de la frise.
+  m.classList.add('on');
+  m.style.left = '0px'; m.style.top = '0px';
+  const r = m.getBoundingClientRect();
+  m.style.left = Math.max(8, Math.min(x, window.innerWidth - r.width - 8)) + 'px';
+  m.style.top  = Math.max(8, Math.min(y, window.innerHeight - r.height - 8)) + 'px';
+}
+document.addEventListener('pointerdown', e => {
+  if (!$('#menuPlan').contains(e.target) && !e.target.classList.contains('plus'))
+    fermerMenu();
+});
+
+async function poser(i, cle, valeur){
+  const p = BP.plans[i], num = p.n || i + 1;
+  const avant = p[cle] && p[cle].type ? p[cle].type : '';
+  if (!valeur) delete p[cle];
+  else if (cle === 'sortie') p.sortie = {type: valeur};
+  else p.mouvement = {type: valeur, force: FORCE[valeur] || .06};
+  await enregistrer(true);
+  const nom = cle === 'sortie' ? (TR_LONG[valeur] || valeur) : (MVT_LONG[valeur] || valeur);
+  const quoi = cle === 'sortie' ? 'la coupe ' + num + '→' + (num + 1) : 'le plan ' + num;
+  dire(valeur
+    ? '<b>' + esc(nom) + '</b> sur ' + quoi + '. Visible après un rendu, pas dans l’aperçu.'
+    : (avant ? 'Plus rien sur ' + quoi + ' : coupe franche, image fixe.'
+             : 'Il n’y avait déjà rien sur ' + quoi + '. Je n’ai touché à rien.'),
+    valeur || avant ? 'fait' : 'rien');
+}
+
+async function dupliquer(i){
+  const copie = JSON.parse(JSON.stringify(BP.plans[i]));
+  BP.plans.splice(i + 1, 0, copie);
+  BP.plans.forEach((q, k) => q.n = k + 1);
+  await enregistrer(true);
+  choisir(i + 1);
+  dire('<b>Plan ' + (i + 1) + ' dupliqué.</b> Le film en compte maintenant '
+     + BP.plans.length + '. Les deux copies jouent le même morceau de rush.', 'fait');
+}
+
+async function supprimer(i){
+  if (BP.plans.length <= 1){
+    dire('C’est le seul plan du montage : le supprimer ne laisserait pas de film. '
+       + 'Rien n’a été supprimé.', 'rien'); return;
+  }
+  const p = BP.plans[i], num = p.n || i + 1;
+  BP.plans.splice(i, 1);
+  BP.plans.forEach((q, k) => q.n = k + 1);
+  SEL = Math.min(i, BP.plans.length - 1);
+  await enregistrer(true);
+  ALLER(Math.min(T, TOTAL));
+  dire('<b>Plan ' + num + ' supprimé</b> (' + fr(p.duree) + ' s). Le film passe à '
+     + fr(TOTAL) + ' s et ' + BP.plans.length + ' plans. <b>Annuler</b> le remet.', 'fait');
+}
+
+/* Ne voir que ce plan : le zoom se cale sur sa duree et la vue se centre
+   dessus. C'est le seul moyen de travailler une coupe de 0,4 s. */
+function isoler(i){
+  const [d, f] = BORNES[i], df = $('#defile');
+  ZOOM = Math.max(.2, Math.min(24, (df.clientWidth - 40) / Math.max(.2, (f - d) * PXPS)));
+  frise();
+  df.scrollLeft = Math.max(0, xDe(d) - 20);
+  ALLER(d + 0.02);
+}
+
+/* Entrer plus tard / sortir plus tot, au clavier. Le bord du plan vient a la
+   tete de lecture : c'est le geste « I / O » de tous les bancs de montage, et
+   il est bien plus precis que la poignee a la souris. */
+async function borner(cote){
+  const i = BORNES.findIndex(([d, f]) => T >= d && T < f);
+  if (i < 0){ dire('Place d’abord la tête de lecture sur un plan.', 'rien'); return }
+  const [d0, f0, p] = BORNES[i];
+  const nd = cote === 'i' ? +(f0 - T).toFixed(3) : +(T - d0).toFixed(3);
+  if (nd < 0.12){
+    dire('Il resterait ' + fr(nd) + ' s : sous 0,12 s un plan ne tient pas une image. '
+       + 'Rien n’a bougé.', 'rien'); return;
+  }
+  if (cote === 'i'){
+    const decal = +(T - d0).toFixed(3);
+    if (p.src_debut !== undefined) p.src_debut = +(p.src_debut + decal).toFixed(3);
+    else p.debut = +((p.debut || 0) + decal).toFixed(3);
+  }
+  p.duree = nd;
+  if (p.fin !== undefined) p.fin = +((p.debut || 0) + p.duree).toFixed(3);
+  await enregistrer(true);
+  dire('Plan <b>' + (p.n || i + 1) + '</b> : ' + fr(f0 - d0) + ' s → <b>' + fr(nd) + ' s</b> ('
+     + (cote === 'i' ? 'entrée retardée' : 'sortie avancée') + ').', 'fait');
+}
+
+/* --------------------------------------------------------------- lecture */
+const v = $('#video');
+let T = 0, IDX = 0;
+
+/* Le fichier joue n'est pas le montage : chaque plan pioche un morceau de la
+   source. On convertit donc le temps de montage en temps de fichier. Sans ca,
+   raccourcir un plan changerait le mp4 mais pas l'apercu — l'outil mentirait. */
+const entree = p => (p.src_debut !== undefined ? p.src_debut : (p.debut || 0));
+
+function srcDe(t){
+  if (RENDU) return t;
+  let i = BORNES.findIndex(([d, f]) => t >= d && t < f);
+  if (i < 0) i = Math.max(0, BORNES.length - 1);
+  return entree(BORNES[i][2]) + (t - BORNES[i][0]);
+}
+function ALLER(t){
+  T = Math.max(0, Math.min(TOTAL, t));
+  IDX = Math.max(0, BORNES.findIndex(([d, f]) => T >= d && T < f));
+  v.currentTime = srcDe(T);
+  peindre();
+}
+
+function tic(){
+  if (!v.paused){
+    if (RENDU){ T = v.currentTime }
+    else {
+      const b = BORNES[IDX];
+      if (b){
+        const p = b[2], e0 = entree(p);
+        T = b[0] + (v.currentTime - e0);
+        if (v.currentTime >= e0 + p.duree - 0.02){
+          if (IDX + 1 < BORNES.length){
+            IDX++; T = BORNES[IDX][0];
+            const suiv = entree(BORNES[IDX][2]);
+            // ne pas chercher pour rien : sur une coupe franche entre deux
+            // plans contigus, la lecture continue toute seule.
+            if (Math.abs(suiv - v.currentTime) > 0.05) v.currentTime = suiv;
+          } else { v.pause(); T = TOTAL }
+        }
+      }
+    }
+  }
+  peindre();
+  requestAnimationFrame(tic);
+}
+
+function peindre(){
+  if (!BORNES.length) return;
+  $('#tCourant').textContent = tc(T);
+  const x = xDe(T);
+  $('#tete').style.left = x + 'px';
+
+  const c = CARTES.find(c => T >= c.d && T < c.f);
+  $('#stLive').innerHTML = c ? '<span>' + esc(c.texte) + '</span>' : '';
+
+  const i = BORNES.findIndex(([d, f]) => T >= d && T < f);
+  $('#tPlan').textContent = i < 0 ? '–' : (BORNES[i][2].n || i + 1);
+  document.querySelectorAll('.bloc-plan').forEach(e =>
+    e.classList.toggle('on', +e.dataset.i === i));
+  const j = CARTES.indexOf(c);
+  document.querySelectorAll('.bloc-st').forEach(e =>
+    e.classList.toggle('on', +e.dataset.i === j));
+
+  const df = $('#defile');
+  if (!v.paused && (x < df.scrollLeft + 40 || x > df.scrollLeft + df.clientWidth - 40))
+    df.scrollLeft = Math.max(0, x - df.clientWidth * 0.35);
+}
+
+$('#bPlay').onclick = () => {
+  if (v.paused){ v.currentTime = srcDe(T); v.play() } else v.pause();
+};
+v.onplay  = () => $('#bPlay').textContent = '❚❚';
+v.onpause = () => $('#bPlay').textContent = '▶';
+requestAnimationFrame(tic);
+
+/* ------------------------------------------------------------ ecriture */
+async function enregistrer(silencieux){
+  BP.style_sous_titres = {...(BP.style_sous_titres || {}), ...ST};
+  const r = await fetch('/api/projet/' + encodeURIComponent(NOM),
+    {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(BP)});
+  if (!r.ok){ dire('L\'enregistrement a échoué.'); return }
+  const c = await (await fetch('/api/cartes/' + encodeURIComponent(NOM))).json();
+  CARTES = c.cartes || []; ST = c.style || ST;
+  $('#infoProjet').textContent = BP.plans.length + ' plans · ' + CARTES.length + ' sous-titres';
+  frise(); majStyle();
+  if (!silencieux) dire('<b>Style enregistré.</b> Le prochain rendu le prendra.', true);
+}
+$('#bReglages').onclick = () => {
+  document.body.classList.toggle('reglages');
+  location.hash = document.body.classList.contains('reglages') ? 'reglages' : '';
+};
+if (location.hash === '#reglages') document.body.classList.add('reglages');
+
+/* Le contrôle mesure le montage contre la grammaire du winner. Il existait
+   depuis longtemps dans outils/controler.py et n'était branché nulle part :
+   un outil qui sait juger et ne le dit pas ne sert à rien. */
+const REPARE = [
+  {sur:/hook/i,        phrase:'raccourcis le hook à 1,3 s',     quoi:'raccourcir le hook'},
+  {sur:/silence|vide/i,phrase:'enleve les silences',            quoi:'enlever les silences'},
+  {sur:/densite|mots/i,phrase:'4 mots par sous-titre',          quoi:'resserrer les cartes'},
+  {sur:/metronome/i,   phrase:'coupe plus vite',                quoi:'casser le métronome'},
+  {sur:/carte finale/i,phrase:null,                             quoi:null},
+];
+$('#bAnalyser').onclick = async () => {
+  const att = dire('<span class="attente">j\'analyse le montage…</span>');
+  let d;
+  try { d = await (await fetch('/api/controle/' + encodeURIComponent(NOM))).json() }
+  catch(e){ att.remove(); dire('L\'analyse n\'a pas pu tourner.', 'rien'); return }
+  att.remove();
+  if (d.erreur){ dire('L\'analyse a échoué : ' + esc(d.erreur), 'rien'); return }
+  if (!d.ecarts.length){
+    dire('<b>Rien à signaler.</b> Ce montage tient la grammaire du winner.', 'fait'); return;
+  }
+  const puces = [];
+  for (const e of d.ecarts){
+    const r = REPARE.find(r => r.sur.test(e.tag) || r.sur.test(e.texte));
+    if (r && r.phrase && !puces.some(p => p.includes(r.phrase)))
+      puces.push(`<span class="rgl"><b>${r.quoi}</b><button data-p="${r.phrase}">faire</button></span>`);
+  }
+  dire('<b>' + d.ecarts.length + ' écart' + (d.ecarts.length > 1 ? 's' : '') + ' mesuré'
+     + (d.ecarts.length > 1 ? 's' : '') + '.</b> Ce sont des mesures, pas des verdicts.'
+     + '<ul>' + d.ecarts.map(e => '<li><b>' + esc(e.tag) + '</b> — ' + esc(e.texte) + '</li>').join('') + '</ul>'
+     + (puces.length ? '<div class="rgls">' + puces.join('') + '</div>' : ''), 'rien');
+};
+
+/* Les yeux : cacher une piste dans l'aperçu ne touche jamais le montage.
+   C'est un réglage de CONFORT, il n'est pas enregistré. */
+let VOIR = {image: true, son: true, texte: true};
+$('#oeilImage').onclick = e => {
+  VOIR.image = !VOIR.image; e.target.classList.toggle('on', VOIR.image);
+  $('#video').style.opacity = VOIR.image ? 1 : 0.12;
+};
+$('#oeilTexte').onclick = e => {
+  VOIR.texte = !VOIR.texte; e.target.classList.toggle('on', VOIR.texte);
+  $('#stLive').style.display = VOIR.texte ? '' : 'none';
+};
+// Le son se coupe dans l'APERÇU seulement. Le montage garde le sien : un
+// bouton d'ecoute qui modifierait le film serait un piege.
+$('#oeilSon').onclick = e => {
+  VOIR.son = !VOIR.son; e.target.classList.toggle('on', VOIR.son);
+  $('#video').muted = !VOIR.son;
+  $('#pisteSon').style.opacity = VOIR.son ? 1 : .4;
+};
+
+/* Couper au curseur : le plan courant devient deux plans. Le second entre plus
+   tard dans la source, exactement là où le premier s'arrête. */
+async function couper(){
+  const i = BORNES.findIndex(([d, f]) => T >= d && T < f);
+  if (i < 0){ dire('Place d\'abord la tête de lecture sur un plan.', 'rien'); return }
+  const [d0, , p] = BORNES[i];
+  const avant = +(T - d0).toFixed(3), apres = +(p.duree - avant).toFixed(3);
+  if (avant < 0.12 || apres < 0.12){ dire('Trop près du bord du plan pour couper.', 'rien'); return }
+  const entree0 = (p.src_debut !== undefined ? p.src_debut : (p.debut || 0));
+  const second = JSON.parse(JSON.stringify(p));
+  p.duree = avant;
+  if (p.fin !== undefined) p.fin = +((p.debut || 0) + avant).toFixed(3);
+  if (second.src_debut !== undefined) second.src_debut = +(entree0 + avant).toFixed(3);
+  else second.debut = +(entree0 + avant).toFixed(3);
+  second.duree = apres;
+  if (second.fin !== undefined) second.fin = +((second.debut || 0) + apres).toFixed(3);
+  BP.plans.splice(i + 1, 0, second);
+  BP.plans.forEach((q, k) => q.n = k + 1);
+  await enregistrer(true);
+  dire('<b>Plan coupé à ' + tc(T) + '.</b> ' + fr(avant) + ' s + ' + fr(apres)
+     + ' s, le film en compte maintenant ' + BP.plans.length + '.', 'fait');
+}
+$('#bCouper').onclick = couper;
+$('#bAnnuler').onclick = async () => {
+  const r = await (await fetch('/api/annuler', {method:'POST',
+    headers:{'Content-Type':'application/json'}, body: JSON.stringify({projet: NOM})})).json();
+  if (!r.ok){ dire('Rien à annuler.', 'rien'); return }
+  await charger(true);
+  dire('<b>Annulé.</b> Retour à l\'état du ' + esc(r.quand || '?') + ', '
+     + r.reste + ' pas encore en réserve. Rien n\'est détruit, les états annulés '
+     + 'sont gardés dans recettes/historique/.', 'fait');
+};
+
+async function rendre(brouillon){
+  await enregistrer(true);
+  $('#bRendre').disabled = true; $('#bApercu').disabled = true;
+  (brouillon ? $('#bApercu') : $('#bRendre')).textContent = 'en cours…';
+  const r = await (await fetch('/api/rendre', {method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({projet: NOM, brouillon: brouillon})})).json();
+  dire('<b>' + (brouillon ? 'Aperçu rapide lancé' : 'Rendu final lancé')
+     + '.</b> ' + BP.plans.length + ' plans à encoder, '
+     + (brouillon ? '3 Mbit/s' : '9 Mbit/s') + '.');
+  const suivre = setInterval(async () => {
+    const t = await (await fetch('/api/tache/' + r.tache)).json();
+    if (t.etat === 'en cours') return;
+    clearInterval(suivre);
+    $('#bRendre').disabled = false; $('#bRendre').textContent = 'Rendre la vidéo';
+    $('#bApercu').disabled = false; $('#bApercu').textContent = 'Aperçu rapide';
+    if (t.etat === 'fini'){
+      dire('<b>' + (brouillon ? 'Aperçu rapide fini' : 'Rendu final fini') + '.</b> '
+         + (t.resultat ? esc(t.resultat.video) : '')
+         + (brouillon ? '<br><span class="attente">qualité brouillon, 3 Mbit/s : '
+                      + 'utilise « Rendre la vidéo » pour le fichier à publier.</span>' : ''), 'fait');
+      v.src = '/media?f=' + encodeURIComponent('sorties/' + NOM + '.montage.mp4') + '&r=' + Date.now();
+      RENDU = true; PERIME = null; ALLER(0);
+    } else {
+      dire('<b>Le rendu a échoué.</b><br>' + (t.lignes || []).slice(-4).join('<br>'));
+    }
+  }, 1500);
+}
+$('#bRendre').onclick = () => rendre(false);
+$('#bApercu').onclick = () => rendre(true);
+
+/* ------------------------------------------------------------- demandes */
+document.querySelectorAll('.puce[data-ex]').forEach(b => b.onclick = () => {
+  $('#txtDemande').value = b.dataset.ex; $('#txtDemande').focus();
+});
+
+/* Chaque reglage touche par une phrase se re-regle par une puce. La puce ne
+   fait qu'ECRIRE la phrase suivante : un seul chemin de code, et Eric apprend
+   le vocabulaire en s'en servant. */
+const REGLAGES = [
+  {sur:/contraste/i,               moins:'moins de contraste',       plus:'plus de contraste',      nom:'contraste'},
+  {sur:/saturation/i,              moins:'moins de saturation',      plus:'plus de saturation',     nom:'saturation'},
+  {sur:/luminosite/i,              moins:'image plus sombre',        plus:'image plus lumineuse',   nom:'luminosité'},
+  {sur:/chaleur/i,                 moins:'image plus froide',        plus:'image plus chaude',      nom:'chaleur'},
+  {sur:/vignette/i,                moins:'moins de vignette',        plus:'plus de vignette',       nom:'vignette'},
+  {sur:/nettete|piquee/i,          moins:'moins net',                plus:'plus net',               nom:'netteté'},
+  {sur:/% de la hauteur/i,         moins:'sous-titres plus petits',  plus:'sous-titres plus gros',  nom:'taille du texte'},
+  {sur:/hauteur dans l'image/i,    moins:'descends les sous-titres', plus:'monte les sous-titres',  nom:'hauteur du texte'},
+  {sur:/mots par sous-titre/i,     moins:'moins de mots',            plus:'plus de mots',           nom:'mots par carte'},
+  {sur:/le film fait/i,            moins:'plus lent',                plus:'coupe plus vite',        nom:'rythme'},
+];
+const CHOIX_SUITE = [
+  {sur:/fondu|coupes franches/i, nom:'transition',
+   options:[['coupes franches','franche'],['mets un fondu de 0,2 s','fondu 0,2'],['mets un fondu de 0,35 s','fondu 0,35']]},
+  {sur:/sur chaque coupe|plus de bruits/i, nom:'bruit',
+   options:[['enleve les bruits','aucun'],['mets un whoosh sur les coupes','whoosh'],['mets un clic sur les coupes','clic'],['mets un riser sur les coupes','riser']]},
+];
+
+function puces(changements){
+  const vus = new Set(), out = [];
+  for (const c of changements){
+    for (const r of REGLAGES) if (r.sur.test(c) && !vus.has(r.nom)){
+      vus.add(r.nom);
+      out.push(`<span class="rgl"><b>${r.nom}</b>`
+        + `<button data-p="${r.moins}">−</button>`
+        + `<button data-p="${r.plus}">+</button></span>`);
+    }
+    for (const r of CHOIX_SUITE) if (r.sur.test(c) && !vus.has(r.nom)){
+      vus.add(r.nom);
+      out.push(`<span class="rgl"><b>${r.nom}</b>`
+        + r.options.map(([p, l]) => `<button data-p="${p}">${l}</button>`).join('')
+        + `</span>`);
+    }
+  }
+  return out.length ? `<div class="rgls">${out.join('')}</div>` : '';
+}
+
+/* ---------------------------------------------------------------- la voix
+   Eric a dit : « moi, ce que je veux, c'est parler ». Le navigateur
+   enregistre, le Mac transcrit avec Whisper en local. Rien ne sort. */
+let MICRO = null, MORCEAUX = [], DEPART = 0, TIC = null, COMPTE = null, MODE = 'dictee';
+
+function formatMicro(){
+  const s = Math.floor((Date.now() - DEPART) / 1000);
+  const t = String(Math.floor(s / 60)) + ':' + String(s % 60).padStart(2, '0');
+  (MODE === 'voixoff' ? $('#bVoixOff') : $('#bMicro')).textContent = t;
+}
+
+function typeAudio(){
+  for (const t of ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'])
+    if (window.MediaRecorder && MediaRecorder.isTypeSupported(t)) return t;
+  return '';
+}
+
+async function micro(mode){
+  annulerDepart();          // reparler annule le départ de la dictée précédente
+  if (MICRO && MICRO.state === 'recording'){ MICRO.stop(); return; }
+  MODE = mode === 'voixoff' ? 'voixoff' : 'dictee';
+  if (MODE === 'voixoff' && !NOM){
+    dire('Ouvre d\'abord un montage : une voix off se pose sur un film.', 'rien');
+    return;
+  }
+  let flux;
+  try {
+    flux = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,
+      noiseSuppression:true}});
+  } catch(e){
+    // Un refus de micro se lit dans le NOM de l'erreur, pas dans son texte.
+    const nom = e && e.name || '';
+    dire(nom === 'NotAllowedError'
+      ? 'Le micro est bloqué pour cette page. Ouvre <code>chrome://settings/content/microphone</code> et autorise <code>127.0.0.1:8765</code>, puis recharge.'
+      : 'Pas de micro disponible ici (' + esc(nom || 'inconnu') + ').', 'rien');
+    return;
+  }
+  const mime = typeAudio();
+  MICRO = new MediaRecorder(flux, mime ? {mimeType: mime} : undefined);
+  MORCEAUX = []; DEPART = Date.now();
+  MICRO.ondataavailable = e => { if (e.data.size) MORCEAUX.push(e.data); };
+  const voix = MODE === 'voixoff';
+  const b = voix ? $('#bVoixOff') : $('#bMicro');
+  const repos = voix ? 'voix off' : '●';
+  MICRO.onstop = async () => {
+    clearInterval(TIC);
+    flux.getTracks().forEach(t => t.stop());
+    b.classList.remove('parle'); b.classList.add('pense');
+    b.textContent = voix ? 'je transcris…' : '…';
+    const blob = new Blob(MORCEAUX, {type: mime || 'audio/webm'});
+    const ext = (mime || '').includes('mp4') ? 'mp4' : 'webm';
+    let r;
+    try {
+      r = await (await fetch(voix ? '/api/voixoff' : '/api/dicter', {method:'POST',
+        headers: Object.assign({'Content-Type':'application/octet-stream',
+                                'X-Format': ext},
+                               voix ? {'X-Projet': encodeURIComponent(NOM)} : {}),
+        body: blob})).json();
+    } catch(e){ r = {ok:false, erreur:'l\'enregistrement n\'est pas passé'}; }
+    b.classList.remove('pense'); b.textContent = repos;
+    if (!r.ok || (!voix && !r.texte)){
+      dire('Je n\'ai rien entendu' + (r.erreur ? ' — ' + esc(r.erreur) : '') + '.', 'rien');
+      return;
+    }
+    if (voix){
+      dire('<b>Fait.</b><ul>' + (r.changements || []).map(c => '<li>' + esc(c) + '</li>').join('')
+         + '</ul><span class="fin">Ce qu\'elle dit : «&nbsp;' + esc((r.texte || '').slice(0, 220))
+         + '&nbsp;»</span>', 'fait');
+      await charger(true);
+      return;
+    }
+    const champ = $('#txtDemande');
+    champ.value = (champ.value ? champ.value + ' ' : '') + r.texte;
+    champ.focus();
+    partirDans(3);
+  };
+  MICRO.start();
+  b.classList.add('parle'); formatMicro();
+  TIC = setInterval(formatMicro, 250);
+}
+
+/* Il veut parler puis partir. Mais Whisper se trompe, donc on ne part pas
+   sans lui laisser le temps d'arrêter : un compte à rebours visible, que le
+   moindre geste dans le champ annule. */
+function partirDans(n){
+  annulerDepart();
+  const champ = $('#txtDemande');
+  const chip = document.createElement('div');
+  chip.className = 'compte';
+  chip.innerHTML = 'envoi dans <b>' + n + '</b> s <button>annuler</button>';
+  champ.parentNode.appendChild(chip);
+  chip.querySelector('button').onclick = annulerDepart;
+  champ.addEventListener('input', annulerDepart, {once:true});
+  COMPTE = {chip, champ, reste: n, id: setInterval(() => {
+    COMPTE.reste--;
+    if (COMPTE.reste <= 0){ annulerDepart(); envoyer(); }
+    else chip.querySelector('b').textContent = COMPTE.reste;
+  }, 1000)};
+}
+function annulerDepart(){
+  if (!COMPTE) return;
+  clearInterval(COMPTE.id); COMPTE.chip.remove();
+  // l'écouteur {once:true} ne part pas tout seul si personne n'a tapé :
+  // sans ce retrait, ils s'empilaient à chaque dictée annulée au bouton.
+  COMPTE.champ?.removeEventListener('input', annulerDepart);
+  COMPTE = null;
+}
+
+async function demander(texte, options){
+  const t = (texte || '').trim(); if (!t) return;
+  dire(esc(t), 'moi');
+  const att = dire('<span class="attente">je monte…</span>');
+  let r;
+  try {
+    r = await (await fetch('/api/demande', {method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(Object.assign({projet: NOM, texte: t}, options || {}))})).json();
+  } catch(e){ att.remove(); dire('La demande n\'est pas passée.', 'rien'); return }
+  att.remove();
+
+  // Une règle ne peut pas lancer un travail d'une minute : elle doit répondre
+  // tout de suite. Quand elle a besoin de la séparation voix / musique, elle
+  // le dit avec un marqueur et c'est la PAGE qui propose le bouton. La règle
+  // reste le seul endroit qui écrit dans la recette.
+  if (r.changements) r.changements = r.changements.map(c => {
+    if (!c.includes('|SEPARER|')) return c;
+    setTimeout(() => dire(esc(c.replace('|SEPARER|', '').trim())
+      + '<div class="rgls"><span class="rgl"><b>séparer la voix</b>'
+      + '<button data-t="separer" data-p="' + esc(t) + '">lancer</button>'
+      + '</span></div>', 'rien'), 0);
+    return null;
+  }).filter(Boolean);
+
+  // « rends la vidéo » : la règle a répondu tout de suite avec un marqueur,
+  // c'est la page qui lance le travail d'une minute. Même mécanique que la
+  // séparation de la voix, et la règle reste le seul chemin d'écriture.
+  let lance = false;
+  if (r.changements) r.changements = r.changements.map(c => {
+    if (!c.includes('|ANNULER|')) return c;
+    lance = true;
+    setTimeout(() => $('#bAnnuler').click(), 0);
+    return null;
+  }).filter(Boolean);
+
+  if (r.changements) r.changements = r.changements.map(c => {
+    if (!c.includes('|VARIANTES|')) return c;
+    lance = true;
+    const n = parseInt((c.match(/\|VARIANTES\|\s*(\d+)/) || [])[1] || '3', 10);
+    dire('<b>Je tire ' + n + ' versions.</b> '
+       + esc(c.replace(/\|VARIANTES\|\s*\d+\s*—?\s*/, '')), 'fait');
+    variantes(n);
+    return null;
+  }).filter(Boolean);
+
+  if (r.changements) r.changements = r.changements.map(c => {
+    if (!c.includes('|RENDRE|')) return c;
+    lance = true;
+    dire('<b>Je rends.</b> ' + esc(c.replace('|RENDRE|', '').trim()), 'fait');
+    setTimeout(() => rendre(false), 0);
+    return null;
+  }).filter(Boolean);
+
+  poserSuite(r.suite);
+
+  const refus = r.changements && r.changements.length
+             && r.changements.every(c => /^refus/i.test(c));
+  if (refus){
+    dire('<b>Rien n\'a été changé.</b><ul>'
+       + r.changements.map(c => '<li>' + esc(c) + '</li>').join('') + '</ul>', 'rien');
+  } else if (r.changements && r.changements.length){
+    const badge = r.voie === 'claude code'
+      ? '<span class="voie">Claude Code'
+        + (r.cout ? ' · ' + (r.cout * 100).toFixed(1) + ' cts' : '') + '</span>'
+      : '';
+    dire('<b>Fait.</b>' + badge + '<ul>'
+       + r.changements.map(c => '<li>' + esc(c) + '</li>').join('')
+       + '</ul>' + puces(r.changements), 'fait');
+    await charger(true);       // le montage a change : l'aperçu doit suivre
+  }
+  if (r.note){
+    dire('<b>Ça, l\'outil ne sait pas encore le faire.</b><br>' + esc(r.note)
+       + '<br><span class="fin">C\'est écrit dans <code>a_faire.jsonl</code> : '
+       + 'je le lis au début de chaque session, rien n\'est perdu.</span>', 'rien');
+  }
+  if (r.erreur && !r.changements?.length){
+    dire('Claude Code n\'a pas répondu — ' + esc(r.erreur)
+       + '<br><span class="fin">La demande est notée, elle n\'est pas perdue.</span>', 'rien');
+  }
+  if (!r.changements?.length && !r.note && !r.erreur && !lance){
+    // Ne pas laisser Eric croire qu'il s'est mal exprimé : c'est l'outil qui
+    // n'a pas su. Et le dire ici, pas dans un fichier qu'il n'ouvrira pas.
+    dire('<b>Je n\'ai pas su quoi faire de cette phrase.</b> Ce n\'est pas toi, '
+       + 'c\'est moi.<br><span class="fin">C\'est noté dans la liste des choses '
+       + 'à réparer — clique <b>ce qui cloche</b> pour la voir. Redis-la '
+       + 'autrement si tu veux avancer tout de suite.</span>', 'rien');
+  }
+}
+
+/* Le surveillant. Eric le dit mieux que moi : « tu dois avoir un truc qui
+   tourne tout le temps et qui dit : je dois faire une mise à jour, je dois
+   améliorer ». Le journal existait déjà ; ce qui manquait, c'est que
+   quelqu'un le LISE. */
+const ETIQ = {repare:['✅','réparé'], partiel:['🟡','à moitié'],
+              refus:['🛑','refusé exprès'], casse:['❌','toujours cassé']};
+
+async function veille(){
+  const att = dire('<span class="attente">je relis tout ce que tu as demandé…</span>');
+  let b;
+  try { b = await (await fetch('/api/surveillant')).json() }
+  catch(e){ att.remove(); return dire('Le surveillant n\'a pas répondu.', 'rien') }
+  att.remove();
+  if (b.erreur) return dire('Surveillant : ' + esc(b.erreur), 'rien');
+
+  const v = b.par_verdict || {}, r = b.recent || {par_verdict:{}, sur:0, sante:0};
+  const casse = (b.chantiers || []).filter(c => c.etat === 'casse' || c.etat === 'partiel');
+  const ok    = (b.chantiers || []).filter(c => c.etat === 'repare');
+  const ref   = (b.chantiers || []).filter(c => c.etat === 'refus');
+
+  let h = '<b>' + b.total + ' demandes relues.</b> '
+        + 'Sur les ' + r.sur + ' dernières, <b>' + r.sante + ' %</b> ont abouti '
+        + '<span class="fin">(sur le moment, et ça ne se réécrit pas)</span>.<br>'
+        /* Un chiffre historique ne dit pas où on en est : il comptait comme
+           ratées des phrases réparées depuis, et le même écran listait juste
+           en dessous « ✅ RÉPARÉ » sur ces phrases-là. On affiche donc les
+           deux, et c'est le rejeu qui désigne le travail. */
+        + ((b.sante_aujourdhui && b.sante_aujourdhui.sante != null)
+            ? 'Les mêmes phrases redites <b>aujourd\'hui</b> : <b>'
+              + b.sante_aujourdhui.sante + ' %</b> sur '
+              + b.sante_aujourdhui.sur + ' phrases distinctes.<br>'
+            : '')
+        + '<span class="fin">' + (v.panne||0) + ' pannes avalées · '
+        + (v.repetee||0) + ' redites (tu as dû répéter) · '
+        + (v.rien||0) + ' sans effet · ' + (v.partiel||0) + ' à moitié · '
+        + (v.refus||0) + ' refusées exprès · ' + (v.ok||0) + ' passées.<br>'
+        + 'Coût mesuré depuis le début : ' + (b.cout_total || 0).toFixed(2) + ' $.</span>';
+
+  const rendre = (liste, titre) => liste.length
+    ? '<br><br><b>' + titre + '</b><ul class="chant">' + liste.map(c =>
+        '<li>' + ETIQ[c.etat][0] + ' « ' + esc(c.phrase) + ' »'
+        + '<br><span class="fin">' + esc(c.detail || '') + '</span></li>').join('')
+      + '</ul>' : '';
+
+  h += rendre(casse, 'À RÉPARER — je rejoue chaque phrase contre les règles d\'aujourd\'hui');
+  if (!casse.length) h += '<br><br><b>Rien de cassé.</b> Toutes les phrases qui '
+                        + 'avaient raté repassent aujourd\'hui.';
+  h += rendre(ref, 'Refusées volontairement (ce ne sont pas des pannes)');
+  h += rendre(ok.slice(0, 6), 'Réparées depuis');
+
+  const mots = (b.mots_inconnus || []).filter(m => m.fois > 1);
+  if (mots.length) h += '<br><b>Mots que rien ne sait lire</b><br><span class="fin">'
+    + mots.map(m => esc(m.mot) + ' (' + m.fois + '×)').join(' · ') + '</span>';
+  dire(h, 'fait');
+}
+$('#bVeille').onclick = veille;
+
+function envoyer(){
+  const t = $('#txtDemande').value.trim(); if (!t) return;
+  $('#txtDemande').value = '';
+  return demander(t);
+}
+
+// les puces de reglage sont posees apres coup : on ecoute le fil, pas le bouton
+$('#suite').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  demander(b.dataset.p);
+});
+
+$('#fil').addEventListener('click', e => {
+  const b = e.target.closest('.rgl button'); if (!b) return;
+  if (b.dataset.t === 'separer') return separer(b);
+  demander(b.dataset.p);
+});
+
+/* Séparer la voix du reste. Ça tourne en local sur le GPU du Mac, environ
+   45 s pour une minute de rush, et une seule fois par fichier : le résultat
+   est gardé. Quand c'est fini on redit la phrase, qui pose la piste par la
+   voie 1 — jamais deux chemins d'écriture. */
+async function separer(bouton){
+  bouton.disabled = true; bouton.textContent = 'en cours…';
+  const att = dire('<span class="attente">je sépare la voix de la musique… '
+                 + 'environ 45 s par minute de rush, en local.</span>');
+  let r;
+  try {
+    r = await (await fetch('/api/separer', {method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({projet: NOM})})).json();
+  } catch(e){ r = {erreur: 'la demande n\'est pas passée'} }
+  if (r.erreur || !r.tache){
+    att.remove(); bouton.disabled = false; bouton.textContent = 'lancer';
+    dire('La séparation n\'a pas pu démarrer : ' + esc(r.erreur || 'sans raison donnée'), 'rien');
+    return;
+  }
+  const suivre = setInterval(async () => {
+    const t = await (await fetch('/api/tache/' + r.tache)).json();
+    if (t.etat === 'en cours') return;
+    clearInterval(suivre); att.remove();
+    bouton.disabled = false; bouton.textContent = 'lancer';
+    if (t.etat !== 'fini'){
+      dire('<b>La séparation a échoué.</b><br>'
+         + esc((t.lignes || []).slice(-3).join(' ')), 'rien');
+      return;
+    }
+    dire('<b>Voix et musique séparées.</b> Gardé dans <code>sons_separes/</code> : '
+       + 'ce rush ne sera plus jamais recalculé.', 'fait');
+    demander(bouton.dataset.p || 'enleve la musique');
+  }, 2000);
+}
+
+$('#bEnvoyer').onclick = envoyer;
+/* Voie 3 : il ouvre les images. C'est le seul bouton qui coûte vraiment, on
+   le dit avant de le lancer plutôt qu'après. */
+$('#bScript').onclick = () => {
+  document.body.classList.add('reglages');
+  const z = $('#txtScript');
+  z.scrollIntoView({block:'center', behavior:'smooth'});
+  if (!z.value.trim()) $('#bLireScript').click();
+  z.focus();
+};
+
+$('#bRegarder').onclick = () => {
+  const n = (BP?.plans || []).length;
+  if (!n){ dire('Ouvre d\'abord un montage.', 'rien'); return }
+  const deja = BP?.vision_remplie;
+  const sec = Math.max(20, Math.round(n * 1.9));
+  const cts = Math.max(3, Math.round(n * 0.26));
+  if (!confirm(`Claude Code va ouvrir les ${n} plans et décrire ce qu'il voit.\n`
+    + `Environ ${sec} s et ${cts} centimes.`
+    + (deja ? '\n\nCe montage a déjà été regardé : ça va le refaire.' : '')
+    + '\n\nOn y va ?')) return;
+  demander('Regarde à nouveau les images et décris chaque plan : cadre, sujet, rôle.',
+           {regarder: true});
+};
+
+$('#bLireScript').onclick = () => {
+  const t = (BP?.plans || []).map(p => (p.mots || []).map(m => m.m).join(' ')).join(' ');
+  if (!t.trim()){ dire('Ce montage n\'a pas encore de mots horodatés.', 'rien'); return }
+  $('#txtScript').value = t;
+};
+$('#bPoserScript').onclick = async () => {
+  const t = $('#txtScript').value.trim();
+  if (!t){ dire('Colle d\'abord le texte corrigé.', 'rien'); return }
+  const att = dire('<span class="attente">je cale le script…</span>');
+  let r;
+  try {
+    r = await (await fetch('/api/script', {method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({projet: NOM, texte: t})})).json();
+  } catch(e){ r = {ok:false, erreur:'la demande n\'est pas passée'} }
+  att.remove();
+  if (!r.ok){ dire(esc(r.erreur || 'ça n\'a pas marché'), 'rien'); return }
+  dire('<b>Fait.</b><ul>' + r.changements.map(c => '<li>' + esc(c) + '</li>').join('')
+     + '</ul>', 'fait');
+  await charger(true);
+};
+$('#bMicro').onclick = () => micro('dictee');
+$('#bVoixOff').onclick = () => micro('voixoff');
+$('#txtDemande').onkeydown = e => {
+  if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); envoyer() }
+};
+/* ---------------------------------------------------------- raccourcis */
+/* Un banc de montage se tient au clavier : la souris sert a viser, pas a
+   repeter. Deux gardes, et les deux ont deja manque quelque part :
+   - dans un champ de saisie, une touche est une LETTRE, jamais un ordre ;
+   - une touche avec ⌘, Ctrl ou Alt appartient au navigateur, sauf celles
+     qu'on revendique explicitement juste au-dessus de la garde. */
+const ecrit = e => {
+  const el = e.target;
+  return !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA'
+               || el.tagName === 'SELECT' || el.isContentEditable);
+};
+function aide(ouvrir){
+  $('#aideClavier').classList.toggle('on', ouvrir);
+  $('#voile').classList.toggle('on', ouvrir);
+}
+$('#bAide').onclick = () => aide(!$('#aideClavier').classList.contains('on'));
+$('#voile').onclick = () => aide(false);
+
+document.addEventListener('keydown', e => {
+  // ⌘M marche partout, y compris depuis le champ : c'est le geste « je parle ».
+  if ((e.metaKey || e.ctrlKey) && (e.key === 'm' || e.key === 'M')){
+    e.preventDefault(); micro('dictee'); return;
+  }
+  if (e.key === 'Escape'){ fermerMenu(); aide(false); return }
+  if ((e.metaKey || e.ctrlKey) && !e.shiftKey && (e.key === 'z' || e.key === 'Z')){
+    if (ecrit(e)) return;             // ⌘Z dans un champ = defaire sa frappe
+    e.preventDefault(); $('#bAnnuler').click(); return;
+  }
+  if (ecrit(e) || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.key === '?'){ e.preventDefault(); aide(true); return }
+  if (!BORNES.length) return;
+
+  const img = 1 / FPS;
+  const plan = () => BORNES.findIndex(([d, f]) => T >= d && T < f);
+  const pris = () => { e.preventDefault(); fermerMenu() };
+
+  switch (e.key){
+    case ' ':        pris(); $('#bPlay').click(); break;
+    case 'b': case 'B': pris(); couper(); break;
+    case 'd': case 'D': pris(); if (SEL >= 0) dupliquer(SEL);
+                        else dire('Choisis d’abord un plan dans la frise.', 'rien'); break;
+    case 'm': case 'M': {
+      pris();
+      const i = SEL >= 0 ? SEL : plan();
+      if (i < 0){ dire('Choisis d’abord un plan dans la frise.', 'rien'); break }
+      const el = document.querySelector('.bloc-plan[data-i="' + i + '"]');
+      const r = el ? el.getBoundingClientRect() : {left: 120, top: 200};
+      choisir(i); menu(i, r.left, r.top - 8);
+      break;
+    }
+    case 'i': case 'I': pris(); borner('i'); break;
+    case 'o': case 'O': pris(); borner('o'); break;
+    case 'Backspace': case 'Delete': {
+      pris();
+      const i = SEL >= 0 ? SEL : plan();
+      if (i < 0){ dire('Choisis d’abord un plan dans la frise.', 'rien'); break }
+      supprimer(i); break;
+    }
+    case 'ArrowLeft':  pris(); ALLER(T - (e.shiftKey ? 1 : img)); break;
+    case 'ArrowRight': pris(); ALLER(T + (e.shiftKey ? 1 : img)); break;
+    // Le plan PRECEDENT, c'est le debut du plan courant si on n'y est pas
+    // deja : c'est ce que fait tout banc de montage, et c'est ce qu'on veut
+    // neuf fois sur dix quand on tape la fleche du haut.
+    case 'ArrowUp': {
+      pris();
+      const i = plan();
+      if (i < 0) break;
+      choisir(T - BORNES[i][0] > 0.05 ? i : Math.max(0, i - 1));
+      break;
+    }
+    case 'ArrowDown': {
+      pris();
+      const i = plan();
+      if (i >= 0 && i + 1 < BORNES.length) choisir(i + 1);
+      break;
+    }
+    case 'Home': pris(); ALLER(0); break;
+    case 'End':  pris(); ALLER(TOTAL - img); break;
+    case '+': case '=': pris(); zoomer(1.6); break;
+    case '-': case '_': pris(); zoomer(1 / 1.6); break;
+    case '0': pris(); ajuster(); break;
+  }
+});
+
+// Redessiner l'onde quand la fenetre change : le canvas est en pixels, il ne
+// se met pas a l'echelle tout seul comme le reste de la frise.
+let minuteurTaille = null;
+window.addEventListener('resize', () => {
+  clearTimeout(minuteurTaille);
+  minuteurTaille = setTimeout(() => { if (BORNES.length) onde() }, 120);
+});
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+# Le socle. Ces deux paquets sont lus par le rendu et par la recherche
+# de bandeau, donc rien ne marche sans eux.
+numpy>=1.26
+Pillow>=10.0
+
+# Optionnels. Chacun est importe DANS la fonction qui s'en sert, jamais
+# en tete de module : sans eux l'outil demarre et monte, il perd
+# seulement la fonction en face.
+#
+#   openai-whisper   la transcription et la dictee vocale
+#                    (outils/dicter.py, outils/analyser_winner.py)
+#                    tire torch avec lui, environ 2,5 Go
+#
+#   demucs           separer la voix de la musique, pour enlever une
+#                    bande son sans toucher aux paroles
+#                    (outils/separer.py)
+#
+# openai-whisper>=20250625
+# demucs>=4.1.0
