@@ -9,6 +9,10 @@ notes.
 import json, re, sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import format_bp      # le format du blueprint : version, migrations,
+                      # et « entree() », le point d'entree canonique
+
 RACINE = Path(__file__).resolve().parent.parent
 REC = RACINE / "recettes"
 
@@ -39,7 +43,7 @@ def silences(bp):
 
 def controler(nom):
     chemin = REC / f"{nom}.blueprint.json"
-    bp = json.loads(chemin.read_text())
+    bp = format_bp.charger(chemin, dire=False)
     plans, ry = bp["plans"], bp.get("rythme", {})
     # On mesure le MONTAGE COURANT, jamais les valeurs figees a l'analyse.
     # `conteneur.duree` et `rythme.plan_ouverture` decrivent le fichier
@@ -170,8 +174,15 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"\n{n}\n  illisible : {e}")
             continue
-        print(f"\n\033[1m{n}\033[0m  {bp['conteneur']['duree']:.1f} s, "
-              f"{bp['rythme']['n_plans']} plans")
+        # L'en-tete lisait `conteneur.duree` et `rythme.n_plans`, qui
+        # decrivent le fichier ANALYSE. Il annoncait « 50,9 s, 32 plans »
+        # pendant que les verdicts imprimes juste en dessous portaient sur
+        # 7,4 s et 4 plans, recalcules par controler(). Un en-tete FIXE et un
+        # corps CALCULE se contredisaient sur la meme fiche.
+        plans_ = bp.get("plans") or []
+        print(f"\n\033[1m{n}\033[0m  "
+              f"{sum(p.get('duree', 0.0) for p in plans_):.1f} s, "
+              f"{len(plans_)} plans")
         if not ecarts:
             print("  rien a signaler")
         for tag, txt in ecarts:
