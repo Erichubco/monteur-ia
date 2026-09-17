@@ -19,6 +19,10 @@ Produit :
 import argparse, json, os, re, subprocess, sys, unicodedata
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import format_bp      # le format du blueprint : version, migrations,
+                      # et « entree() », le point d'entree canonique
+
 # ---------------------------------------------------------------- utilitaires
 
 def sh(cmd, **kw):
@@ -292,7 +296,7 @@ def main():
         "seuil_utilise": a.seuil,
     }
     out = dossier / f"{nom}.blueprint.json"
-    out.write_text(json.dumps(blueprint, ensure_ascii=False, indent=1), encoding="utf-8")
+    format_bp.enregistrer(blueprint, out)
     print(f"\nOK  {out}")
     print(f"    {len(plans)} plans | plan moyen {blueprint['rythme']['plan_moyen']}s "
           f"| ouverture {blueprint['rythme']['plan_ouverture']}s "

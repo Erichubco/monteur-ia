@@ -8,6 +8,10 @@ vision est un travail de lecture qu'on ne veut pas perdre. Ce script les marie.
 import json, sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import format_bp      # le format du blueprint : version, migrations,
+                      # et « entree() », le point d'entree canonique
+
 RACINE = Path(__file__).resolve().parent.parent
 REC = RACINE / "recettes"
 VIS = REC / "vision"
@@ -21,7 +25,7 @@ def appliquer(nom):
     if not vi_chemin.exists():
         return f"{nom}: pas de vision"
 
-    bp = json.loads(bp_chemin.read_text())
+    bp = format_bp.charger(bp_chemin)
     vi = json.loads(vi_chemin.read_text())
     lignes = vi.get("plans") or []
 
@@ -46,7 +50,7 @@ def appliquer(nom):
         if cle in vi:
             bp[cle] = vi[cle]
 
-    bp_chemin.write_text(json.dumps(bp, ensure_ascii=False, indent=1))
+    format_bp.enregistrer(bp, bp_chemin)
     manque = " (aucune carte finale)" if vi.get("carte_finale") is False else ""
     return f"{nom}: {len(lignes)} plans decrits{manque}"
 

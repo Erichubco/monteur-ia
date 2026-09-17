@@ -22,6 +22,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import format_bp      # le format du blueprint : version, migrations,
+                      # et « entree() », le point d'entree canonique
+
 RACINE = Path(__file__).resolve().parent.parent
 REC = RACINE / "recettes"
 
@@ -47,7 +51,7 @@ def charger(nom):
     f = REC / f"{nom}.blueprint.json"
     if not f.exists():
         sys.exit(f"blueprint introuvable : {nom}")
-    return json.loads(f.read_text(encoding="utf-8"))
+    return format_bp.charger(f)
 
 
 def stock_de(noms):
@@ -230,7 +234,7 @@ def main():
                     "l'a pas remplace."],
     }
     out = REC / f"{a.sortie}.blueprint.json"
-    out.write_text(json.dumps(bp, ensure_ascii=False, indent=1), encoding="utf-8")
+    format_bp.enregistrer(bp, out)
 
     print(f"\n{len(plans)} plans, {t:.2f}s")
     for p in plans[:6] + [{"n": "…"}] + plans[-3:]:

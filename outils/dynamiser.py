@@ -39,6 +39,10 @@ import math
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import format_bp      # le format du blueprint : version, migrations,
+                      # et « entree() », le point d'entree canonique
+
 # --- ce que l'IA a vu, range en familles ---------------------------------
 # Un visage : le zoom avant le sert, il resserre sur l'expression.
 PERSONNE = ("gros plan", "plan taille", "selfie", "selfie nuit", "plan serre",
@@ -353,9 +357,9 @@ def main():
     if len(sys.argv) < 2:
         sys.exit("usage: dynamiser.py <blueprint.json> [intensite]")
     f = Path(sys.argv[1]).expanduser().resolve()
-    bp = json.loads(f.read_text(encoding="utf-8"))
+    bp = format_bp.charger(f)
     ch, j = dynamiser(bp, float(sys.argv[2]) if len(sys.argv) > 2 else 1.0)
-    f.write_text(json.dumps(bp, ensure_ascii=False, indent=1), encoding="utf-8")
+    format_bp.enregistrer(bp, f)
     for x in ch:
         print("»", x)
     print()

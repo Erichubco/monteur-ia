@@ -18,7 +18,13 @@ rien, on ne deplace aucune image.
 """
 import difflib
 import re
+import sys
 import unicodedata
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import format_bp      # le format du blueprint : version, migrations,
+                      # et « entree() », le point d'entree canonique
 
 
 def _cle(mot):
@@ -36,7 +42,7 @@ def mots_du_montage(bp):
     rush ont des horodatages qui se chevauchent."""
     out, t = [], 0.0
     for p in bp.get("plans", []):
-        e = p.get("src_debut", p.get("debut", 0.0))
+        e = format_bp.entree(p)
         for m in p.get("mots") or []:
             out.append({"m": m["m"], "d": t + m["d"] - e, "f": t + m["f"] - e})
         t += p.get("duree", 0.0)
@@ -47,7 +53,7 @@ def reposer(bp, mots):
     """Rend les mots aux plans : chacun va au plan qui tient son MILIEU."""
     t, poses = 0.0, 0
     for p in bp.get("plans", []):
-        e = p.get("src_debut", p.get("debut", 0.0))
+        e = format_bp.entree(p)
         dedans = [m for m in mots
                   if t <= (m["d"] + m["f"]) / 2 < t + p.get("duree", 0.0)]
         p["mots"] = [{"m": m["m"], "d": round(e + m["d"] - t, 3),

@@ -25,6 +25,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import format_bp      # le format du blueprint : version, migrations,
+                      # et « entree() », le point d'entree canonique
+
 RACINE = Path(__file__).resolve().parent.parent
 REC = RACINE / "recettes"
 PY = sys.executable
@@ -53,7 +57,7 @@ def variantes(projet, combien=3, dire=print):
     f = REC / f"{projet}.blueprint.json"
     if not f.exists():
         raise RuntimeError(f"projet inconnu : {projet}")
-    bp = json.loads(f.read_text(encoding="utf-8"))
+    bp = format_bp.charger(f)
 
     gab = (bp.get("gabarit") or {}).get("nom")
     vox = (bp.get("voix") or {}).get("source")
@@ -94,7 +98,7 @@ def variantes(projet, combien=3, dire=print):
     # dit si les versions valent la peine d'etre testees : deux montages qui
     # different sur deux plans ne sont pas deux creas, c'est la meme.
     def origines(n):
-        b = json.loads((REC / f"{n}.blueprint.json").read_text(encoding="utf-8"))
+        b = format_bp.charger(REC / f"{n}.blueprint.json")
         return [p.get("origine", "") for p in b["plans"]]
     ref = origines(projet)
     for n in faits:

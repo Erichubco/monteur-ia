@@ -20,6 +20,10 @@ import sys
 import unicodedata
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import format_bp      # le format du blueprint : version, migrations,
+                      # et « entree() », le point d'entree canonique
+
 STYLE_DEFAUT_TAILLE = 3.6
 
 
@@ -190,7 +194,7 @@ def _duree_plan(p, d, source_duree=None):
             entree = p.get("src_debut", 0.0)
             d = min(d, max(0.12, ds - entree))
     elif source_duree:
-        entree = p.get("src_debut", p.get("debut", 0.0))
+        entree = format_bp.entree(p)
         d = min(d, max(0.12, source_duree - entree))
     p["duree"] = round(d, 3)
     if "fin" in p:
@@ -2082,7 +2086,7 @@ def _r_silences(bp, m):
         mots = q.get("mots") or []
         if not mots:
             continue
-        e = q.get("src_debut", q.get("debut", 0.0))
+        e = format_bp.entree(q)
         premier = mots[0]["d"] - e
         dernier = mots[-1]["f"] - e
         bouge = False
@@ -2939,7 +2943,7 @@ def suite(bp):
         mots = p.get("mots") or []
         if not mots:
             continue
-        e = p.get("src_debut", p.get("debut", 0.0))
+        e = format_bp.entree(p)
         if (p["duree"] - (mots[-1]["f"] - e) > 0.30
                 or (mots[0]["d"] - e) > 0.30):
             blancs += 1

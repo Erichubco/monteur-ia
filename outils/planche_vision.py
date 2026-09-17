@@ -14,6 +14,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import format_bp      # le format du blueprint : version, migrations,
+                      # et « entree() », le point d'entree canonique
+
 RACINE = Path(__file__).resolve().parent.parent
 PAR_PAGE = 16
 COLONNES = 4
@@ -50,7 +54,7 @@ def pages(bp, nom, dossier=None, par_page=PAR_PAGE):
         src = p.get("source") or globale
         # on prend l'image au TIERS du plan : le premier quart peut encore
         # porter la fin de la transition precedente.
-        e = p.get("src_debut", p.get("debut", 0.0))
+        e = format_bp.entree(p)
         lot.append((p, src, e + p.get("duree", 0.0) / 3.0, t))
         t += p.get("duree", 0.0)
 
