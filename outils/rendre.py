@@ -20,10 +20,20 @@ Le blueprint peut porter :
     plans[i].src_debut     ou "debut" — ou entrer dans le rush
     plans[i].duree         combien de temps on y reste
     plans[i].texte         le sous-titre (sinon : les paroles du plan)
+    plans[i].animations    images-cles, en secondes DEPUIS LE DEBUT DU PLAN :
+                           {"zoom": [{"t":0,"v":1.0},{"t":1.2,"v":1.18,"i":"doux"}]}
+                           canaux : zoom, cadrage_x, cadrage_y, luminosite,
+                           contraste, saturation. Voir outils/animation.py
     style_sous_titres      police, taille, couleur, hauteur, contour, majuscules
 """
 import argparse, json, os, re, shutil, subprocess, sys, tempfile
 from pathlib import Path
+
+# Le format du blueprint et les images-cles vivent a cote, pas ici : le moteur
+# ne doit pas etre le seul a savoir lire un montage.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import animation          # noqa: E402  images-cles
+import format_bp          # noqa: E402  version du schema
 
 POLICES = {
     "arial black": "/System/Library/Fonts/Supplemental/Arial Black.ttf",
@@ -64,7 +74,7 @@ def chaine_masque(masque, L, H):
     return [f"drawbox=x={x}:y={y}:w={w}:h={h}:color={coul}@1:t=fill"]
 
 
-def chaine_image(img):
+def chaine_image(img, canaux=None):
     """Les reglages d'image en filtres ffmpeg, dans l'ordre ou un etalonneur
     travaille : exposition et contraste, puis couleur, puis nettete, puis
     vignette. Chaque filtre neutre est OMIS : une chaine plus courte, c'est
@@ -73,7 +83,12 @@ def chaine_image(img):
     c = float(img.get("contraste", 1.0))
     l = float(img.get("luminosite", 0.0))
     sat = float(img.get("saturation", 1.0))
-    if abs(c - 1) > 0.01 or abs(l) > 0.01 or abs(sat - 1) > 0.01:
+    # Un reglage qui BOUGE pendant le plan remplace la constante par sa courbe.
+    # La meme courbe que l'apercu resout : animation.py en est le seul auteur.
+    anime = animation.filtre_eq(canaux or {}, img)
+    if anime:
+        f.append(anime)
+    elif abs(c - 1) > 0.01 or abs(l) > 0.01 or abs(sat - 1) > 0.01:
         f.append(f"eq=contrast={c:.3f}:brightness={l:.3f}:saturation={sat:.3f}")
     ch = float(img.get("chaleur", 0.0))
     if abs(ch) > 0.01:
@@ -206,7 +221,7 @@ def cartes(plan, mots_max=6, duree_max=1.8, mots_mini=3):
     toujours : la boucle avance forcement. Une version anterieure reculait l'index
     puis relancait la meme iteration, et tournait a l'infini sur certains plans."""
     mots = list(plan.get("mots") or [])
-    debut = plan.get("src_debut", plan.get("debut", 0.0))
+    debut = format_bp.entree(plan)
     if not mots:
         t = plan.get("texte") or plan.get("paroles") or ""
         return [{"texte": nettoyer(t), "d": 0.0, "f": plan["duree"]}] if t.strip() else []
@@ -469,7 +484,7 @@ def _dire_mvt(msg):
         DITS_MVT.append(msg)
 
 
-def chaine_mouvement(mvt, duree, fps, L, H):
+def chaine_mouvement(mvt, duree, fps, L, H, canaux=None):
     """Le mouvement de camera, en un seul zoompan.
 
     zoompan avec d=1 rend UNE image de sortie par image d'entree : le compte
@@ -482,6 +497,16 @@ def chaine_mouvement(mvt, duree, fps, L, H):
     transition il continue au-dela, ce qui est exactement ce qu'on veut : le
     mouvement ne doit pas s'arreter pile au moment ou le fondu commence.
     """
+    # Des images-cles decrivent le mouvement plus finement que le vocabulaire
+    # ferme ci-dessous : quand le plan en porte, elles GAGNENT, et on le dit.
+    # Silencieusement, on passerait une demi-journee a chercher pourquoi un
+    # « punch » ne se voit pas.
+    par_cles = animation.filtre_zoompan(canaux or {}, duree, fps, L, H)
+    if par_cles:
+        if mvt:
+            _dire_mvt("ce plan porte des images-cles ET un « mouvement » : "
+                      "les images-cles gagnent, « mouvement » est ignore")
+        return [par_cles]
     if not mvt:
         return []
     if not isinstance(mvt, dict):
@@ -621,7 +646,7 @@ def rendre_plan(plan, source, L, H, fps, style, tmp, i, brouillon, sous_titres,
     faudrait la prendre sur la duree utile et le film raccourcirait de
     (n-1) x duree_du_fondu. Ici on va chercher les images suivantes dans la
     source, comme un monteur tire sur ses amorces."""
-    debut = plan.get("src_debut", plan.get("debut", 0.0))
+    debut = format_bp.entree(plan)
     # Une duree se compte en IMAGES, pas en secondes. ffmpeg garde les images
     # dont l'horodate est STRICTEMENT inferieure a -t, soit floor(t x fps) :
     # demander pile 1,0333 s a 30 i/s rend 30 images, pas 31. On vise donc le
@@ -644,14 +669,20 @@ def rendre_plan(plan, source, L, H, fps, style, tmp, i, brouillon, sous_titres,
     # Le masque passe AVANT l'etalonnage et avant nos sous-titres : on couvre
     # leur texte, puis on traite l'image, puis on ecrit le notre par-dessus.
     etapes += chaine_masque(plan.get("masque") or masque, L, H)
-    etapes += chaine_image({**IMAGE_DEFAUT, **(image or {}), **(plan.get("image") or {})})
+    # Les images-cles du plan, lues UNE fois : l'etalonnage et le mouvement
+    # tirent tous les deux de la meme lecture.
+    canaux, plaintes = animation.lire(plan.get("animations"))
+    for m in plaintes:
+        _dire_mvt(f"plan {plan.get('n', i + 1)} : {m}")
+    etapes += chaine_image({**IMAGE_DEFAUT, **(image or {}), **(plan.get("image") or {})},
+                           canaux)
     etapes += [f"fps={fps}"]
     # Le mouvement passe APRES l'etalonnage et APRES le masque (le cache des
     # sous-titres cuits doit bouger avec eux, il est dans l'image), mais AVANT
     # nos sous-titres, qui sont incrustes plus bas : un sous-titre qui zoome
     # avec l'image est illisible.
     etapes += chaine_mouvement(plan.get("mouvement") or mouvement,
-                               plan["duree"], fps, L, H)
+                               plan["duree"], fps, L, H, canaux)
     etapes += ["setsar=1"]
     vf = ",".join(etapes)
 
@@ -880,7 +911,7 @@ def piste_son(plans, sources, tmp):
     parts, n_total = [], 0
     for i, (p, src) in enumerate(zip(plans, sources)):
         a = tmp / f"a_{i:03d}.wav"
-        d = p.get("src_debut", p.get("debut", 0.0))
+        d = format_bp.entree(p)
         # le compte d'ECHANTILLONS, jamais une duree en secondes : c'est la
         # seule unite ou la coupe est exacte.
         n_ech = max(1, round(float(p["duree"]) * AR))
@@ -928,7 +959,7 @@ def main():
     a = ap.parse_args()
 
     bp_chemin = Path(a.blueprint).expanduser().resolve()
-    bp = json.loads(bp_chemin.read_text(encoding="utf-8"))
+    bp = format_bp.charger(bp_chemin)
     L, H = (int(x) for x in a.taille.lower().split("x"))
     style = {**STYLE_DEFAUT, **bp.get("style_sous_titres", {})}
     source_globale = bp.get("chemin")
