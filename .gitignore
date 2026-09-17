@@ -39,6 +39,7 @@ interface/bobine.html
 # Notes de travail internes : l'etat du chantier, pas la documentation
 # du produit. Elles nomment des clients et des fichiers prives.
 RELAIS_*.md
+HANDOFF_*.md
 
 # --- Reconstructible ---
 venv/
