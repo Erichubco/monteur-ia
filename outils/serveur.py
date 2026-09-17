@@ -19,6 +19,9 @@ import secrets
 import unicodedata
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import format_bp      # le format du blueprint : version et migrations
 from urllib.parse import urlparse, parse_qs, unquote
 
 RACINE = Path(__file__).resolve().parent.parent
@@ -787,12 +790,33 @@ class H(BaseHTTPRequestHandler):
                 importlib.reload(R)
                 bp = json.loads(f_.read_text(encoding="utf-8"))
                 style = {**R.STYLE_DEFAUT, **bp.get("style_sous_titres", {})}
-                cartes, t = [], 0.0
+                # La grille d'echantillonnage de l'apercu est celle du
+                # rendu : rendre.py sort a 30 i/s par defaut.
+                FPS_APERCU = 30
+                cartes, anims, t = [], [], 0.0
                 for p in bp.get("plans", []):
                     for c in R.cartes(p, style["mots_max"]):
                         cartes.append({"texte": c["texte"], "plan": p.get("n"),
                                        "d": round(t + c["d"], 3),
                                        "f": round(t + c["f"], 3)})
+                    # Les images-cles sont RESOLUES ICI, par le meme
+                    # animation.valeur_a() que le rendu appelle. On descend la
+                    # valeur de CHAQUE image : la page lit un echantillon, elle
+                    # ne recalcule jamais la courbe. Une interpolation en
+                    # JavaScript lisserait un canal en « maintien », et
+                    # l'apercu montrerait un film que le mp4 ne contient pas.
+                    canaux, _ = R.animation.lire(p.get("animations"))
+                    if canaux:
+                        dur = float(p.get("duree", 0.0) or 0.0)
+                        n = max(1, round(dur * FPS_APERCU))
+                        ech = {nom: [round(R.animation.valeur_a(
+                                         cles, k / FPS_APERCU,
+                                         R.animation.CANAUX[nom]["defaut"]), 4)
+                                     for k in range(n)]
+                               for nom, cles in canaux.items()}
+                        anims.append({"plan": p.get("n"), "fps": FPS_APERCU,
+                                      "d": round(t, 3), "f": round(t + dur, 3),
+                                      "canaux": ech})
                     t += p.get("duree", 0.0)
                 # Quelle video l'apercu doit-il jouer ? Un film analyse se
                 # rejoue sur son rush. Un REMONTAGE n'a pas de rush unique :
@@ -823,8 +847,14 @@ class H(BaseHTTPRequestHandler):
                             perime = round((dr - dv) / 60.0, 1)
                     except OSError:
                         pass
+                # Le registre des canaux descend d'ici. Une liste recopiee
+                # dans le JavaScript serait un SECOND auteur : le jour ou un
+                # canal change de bornes, la page en poserait d'autres et le
+                # moteur les ramenerait en silence.
                 return self._env(200, {"cartes": cartes, "style": style,
                                        "defaut": R.STYLE_DEFAUT, "video": video,
+                                       "animations": anims,
+                                       "canaux": R.animation.CANAUX,
                                        "hors_dossier": hors, "perime": perime})
             except Exception as e:
                 return self._env(200, {"cartes": [], "erreur": str(e)})
@@ -1018,8 +1048,7 @@ class H(BaseHTTPRequestHandler):
             (hist / f"{nom}.{time.time_ns() // 1000}.json").write_text(
                 fbp.read_text(encoding="utf-8"), encoding="utf-8")
             info = poser_voix(bp, cible, rep.get("mots") or [])
-            fbp.write_text(json.dumps(bp, ensure_ascii=False, indent=1),
-                           encoding="utf-8")
+            format_bp.enregistrer(bp, fbp)
             with open(RACINE / "demandes.jsonl", "a", encoding="utf-8") as fh:
                 fh.write(json.dumps({"t": time.strftime("%Y-%m-%d %H:%M:%S"),
                                      "projet": nom, "texte": "[voix off enregistree]",
@@ -1111,8 +1140,7 @@ class H(BaseHTTPRequestHandler):
             hist = RACINE / "recettes" / "historique"; hist.mkdir(exist_ok=True)
             (hist / f"{nom}.{time.time_ns() // 1000}.json").write_text(
                 avant, encoding="utf-8")
-            fbp.write_text(json.dumps(bp, ensure_ascii=False, indent=1),
-                           encoding="utf-8")
+            format_bp.enregistrer(bp, fbp)
             with open(RACINE / "demandes.jsonl", "a", encoding="utf-8") as fh:
                 fh.write(json.dumps({"t": time.strftime("%Y-%m-%d %H:%M:%S"),
                                      "projet": nom, "texte": "[script colle]",
@@ -1215,6 +1243,9 @@ class H(BaseHTTPRequestHandler):
                     # dernier changement hors de portee du bouton Annuler.
                     # On compare donc le TEXTE avant / apres, jamais la
                     # presence d'un message.
+                    # le numero de schema se pose a l'ECRITURE, sinon la
+                    # premiere regeneration du blueprint l'efface sans bruit.
+                    format_bp.estampiller(bp)
                     apres = json.dumps(bp, ensure_ascii=False, indent=1)
                     if changements and apres != avant_bp:
                         # une sauvegarde avant chaque ecriture : on peut revenir
@@ -1273,8 +1304,7 @@ class H(BaseHTTPRequestHandler):
                             hist.mkdir(exist_ok=True)
                             (hist / f"{nom}.{time.time_ns() // 1000}.json").write_text(
                                 avant_ag, encoding="utf-8")
-                        fbp.write_text(json.dumps(bp, ensure_ascii=False, indent=1),
-                                       encoding="utf-8")
+                        format_bp.enregistrer(bp, fbp)
                     changements += ch2
                     ligne["voie"] = info.get("voie", "claude code")
                     if info.get("cout"):
@@ -1377,6 +1407,9 @@ class H(BaseHTTPRequestHandler):
         # AD22_grammaire_winner, toutes identiques au fichier.
         # C'est la meme regle que sur /api/demande : on compare le TEXTE.
         avant = f.read_text(encoding="utf-8")
+        # le numero de schema se pose a l'ECRITURE, sinon la premiere
+        # regeneration du blueprint l'efface sans bruit.
+        format_bp.estampiller(bp)
         apres = json.dumps(bp, ensure_ascii=False, indent=1)
         if apres == json.dumps(json.loads(avant), ensure_ascii=False, indent=1):
             return self._env(200, {"ok": True, "inchange": True})
