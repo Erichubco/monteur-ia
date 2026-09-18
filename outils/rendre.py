@@ -113,7 +113,16 @@ STYLE_DEFAUT = {
     "hauteur_pct": 57.0,      # 57 % : mesure sur les winners, PAS en bas de l'image
     "largeur_pct": 84.0,
     "majuscules": False,
-    "contour": 0,             # px de contour noir, 0 = ombre seule
+    # 4 px de lisere noir. Le chiffre est MESURE sur le fichier encode, pas
+    # dans Pillow : c'est h264 qui decide si un lisere survit. Sur le pire
+    # sous-titre de « SAC UGC montage court », la part du pourtour de la lettre
+    # qui ne tient pas le 3:1 tombe de 33,5 % sans contour a 21,0 puis 11,5,
+    # 5,4 et 0,0 % a 1, 2, 3 et 4 px. 5 px n'apporte rien et commence a fermer
+    # les contrepoincons. 0 reste possible, c'est un choix explicite.
+    # ATTENTION : la valeur est en PIXELS et vaut pour un texte de 69 px, soit
+    # le rendu 1080x1920 que `serveur.py` demande. Le jour ou `--taille` servira
+    # vraiment, ce champ devra porter la grandeur du TEXTE, pas des pixels.
+    "contour": 4,
     "ombre": True,
     "boite": None,            # ex "#FFFFFF" pour le style capture d'ecran du hook
     "boite_texte": "#111111",
@@ -175,7 +184,9 @@ def png_sous_titre(texte, L, H, style, chemin):
             for dx, dy in ((0, 3), (2, 2), (-2, 2)):
                 d.text((x + dx, y + dy), ligne, font=police, fill=(0, 0, 0, 150))
         if style["contour"]:
-            c = style["contour"]
+            # `range` refuse un flottant, et l'agent declare ce champ en
+            # « nombre » : sans int(), « un contour de 2.5 » plantait le rendu.
+            c = int(style["contour"])
             for dx in range(-c, c + 1):
                 for dy in range(-c, c + 1):
                     if dx or dy:

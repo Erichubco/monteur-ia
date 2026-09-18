@@ -24,6 +24,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import format_bp      # le format du blueprint : version, migrations,
                       # et « entree() », le point d'entree canonique
 
+# L'epaisseur du contour vient du MOTEUR, jamais d'une copie. Elle etait ecrite
+# « 3 » ici pendant que rendre.py en mesurait une autre : deux auteurs pour un
+# seul reglage, et c'est celui qu'Eric ne voit pas qui gagne.
+try:
+    from rendre import STYLE_DEFAUT as _ST_MOTEUR
+    CONTOUR_DEFAUT = _ST_MOTEUR["contour"]
+except Exception:
+    CONTOUR_DEFAUT = 4
+
 STYLE_DEFAUT_TAILLE = 3.6
 
 
@@ -1074,7 +1083,7 @@ def _r_contour(bp, m):
         _style(bp)["contour"] = 0
         return "plus de contour, ombre portee seule"
     noir = "contour" in m.group(0)
-    _style(bp)["contour"] = 3 if noir else 0
+    _style(bp)["contour"] = CONTOUR_DEFAUT if noir else 0
     return "contour noir autour du texte" if noir else "ombre portee sous le texte"
 
 

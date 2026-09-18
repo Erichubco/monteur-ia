@@ -852,7 +852,7 @@ input[type=range]{width:100%;accent-color:var(--carbon)}
       </div>
       <div class="ligne"><label>Détourage</label></div>
       <div class="choix" id="chContour">
-        <button data-v="0">Ombre</button><button data-v="3">Contour noir</button>
+        <button data-v="0">Ombre</button><button data-v="4">Contour noir</button>
       </div>
     </div>
     <div class="bloc">
@@ -1222,7 +1222,7 @@ function peupler(){
   actif('#chFond', ST.boite || '');
   actif('#chCouleur', ST.couleur);
   actif('#chMaj', ST.majuscules ? '1' : '0');
-  actif('#chContour', ST.contour ? '3' : '0');
+  actif('#chContour', ST.contour ? '4' : '0');   // 4 = rendre.STYLE_DEFAUT, qui fait foi
   const tr = BP.transition || {};
   actif('#chTrans', tr.type === 'fondu' ? String(tr.duree || 0.2) : '0');
   $('#rTaille').value = ST.taille_pct;  $('#vTaille').textContent = fr(ST.taille_pct) + ' %';
