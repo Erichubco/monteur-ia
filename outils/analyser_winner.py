@@ -255,14 +255,53 @@ def transcrire(video, modele="small", langue="fr"):
             redresse = {"avant": mots[0]["d"], "apres": apres}
             mots[0]["d"] = apres
     return {"texte": (r.get("text") or "").strip(), "mots": mots,
-            "attaque_s": att, "premier_mot_redresse": redresse}
+            "attaque_s": att, "premier_mot_redresse": redresse,
+            "confiance": confiance(r.get("segments", []))}
 
 HALLUS = ["amara.org", "sous-titres realises par", "sous-titrage", "merci d'avoir regarde"]
 
-def est_halluciné(texte):
+# Le plancher de confiance. Ce n'est pas un nombre choisi : c'est `logprob_threshold`,
+# le seuil que Whisper s'applique A LUI-MEME pour decider de redecoder plus chaud.
+LOGPROB_PLANCHER = -1.0
+
+def confiance(segments):
+    """Ce que Whisper dit de SA propre certitude.
+
+    `temperature` non nulle = il a du REESSAYER : son premier decodage est tombe
+    sous son propre plancher, il est remonte par paliers jusqu'a 1,0. C'est aussi
+    la raison pour laquelle le texte CHANGE d'une passe a l'autre, puisque au-dessus
+    de zero il echantillonne. `avg_logprob` est la confiance du decodage retenu.
+    Rend None quand il n'y a pas de segment."""
+    if not segments:
+        return None
+    return {"temperature_max": round(max(float(s.get("temperature", 0)) for s in segments), 2),
+            "logprob_min": round(min(float(s.get("avg_logprob", 0)) for s in segments), 3)}
+
+def est_halluciné(texte, conf=None):
+    """Deux defauts distincts, deux detecteurs. Rend le MOTIF, ou None.
+
+    1. `generique` : le carton de sous-titrage, que Whisper recrache avec une
+       grande assurance. Seule la liste le voit, la confiance ne le verra jamais.
+    2. `confiance` : le texte INVENTE sur un son inintelligible. Il sort propre et
+       plausible, aucun mot de la liste n'y figure, et le garde le laissait passer.
+
+    Mesure du 18/09/2026 sur les treize rushes du sac : temperature 1,00 et
+    logprob -5,01 / -4,76 sur les deux clips inventes, temperature 0,00 et -0,38
+    au PIRE sur les onze autres. Le trou entre les deux plus proches voisins est
+    de 4,4, et le plancher de Whisper tombe dedans.
+
+    ⚠️ `no_speech_prob` et `compression_ratio` ne servent a RIEN ici, malgre leurs
+    seuils documentes. Le premier culmine sur un clip SAIN (0,096 contre 0,041 sur
+    les inventes) : pris tel quel il designait le mauvais rush. Le second est
+    INVERSE (0,77 sur les inventes contre 1,34 sur les bons) parce qu'il vise la
+    boucle de repetition, pas l'invention."""
     t = unicodedata.normalize("NFKD", texte.lower())
     t = "".join(c for c in t if not unicodedata.combining(c))
-    return any(h in t for h in HALLUS)
+    if any(h in t for h in HALLUS):
+        return "generique"
+    if conf and (conf["temperature_max"] > 0 or conf["logprob_min"] < LOGPROB_PLANCHER):
+        return "confiance"
+    return None
 
 # ----------------------------------------------------------------------- main
 
@@ -317,6 +356,8 @@ def main():
             if any(s["debut"] - 0.06 <= p["debut"] <= s["fin"] + 0.06 for s in audio["silences"]):
                 coupes_en_silence += 1
 
+    motif = est_halluciné(transcript["texte"], transcript.get("confiance")) if transcript["texte"] else None
+
     durees = [p["duree"] for p in plans]
     blueprint = {
         "fichier": video.name,
@@ -336,7 +377,9 @@ def main():
         "transcript": {
             "texte": transcript["texte"],
             "n_mots": len(transcript["mots"]),
-            "suspect_hallucination": est_halluciné(transcript["texte"]) if transcript["texte"] else None,
+            "suspect_hallucination": bool(motif) if transcript["texte"] else None,
+            "motif_hallucination": motif,
+            "confiance": transcript.get("confiance"),
             "mots_par_seconde": round(len(transcript["mots"]) / conteneur["duree"], 2) if transcript["mots"] else 0,
             # l'attaque MESUREE du rush, et le redressement s'il a eu lieu
             "attaque_s": transcript.get("attaque_s"),
@@ -355,6 +398,12 @@ def main():
           f"| ouverture {blueprint['rythme']['plan_ouverture']}s "
           f"| coupes en silence {coupes_en_silence}")
     if planche: print(f"    planche : {planche}")
+    if motif:
+        c = transcript.get("confiance") or {}
+        print(f"\n!!  TRANSCRIPT SUSPECT [{motif}] : temperature {c.get('temperature_max')}, "
+              f"logprob {c.get('logprob_min')}")
+        print(f"    \u00ab {transcript['texte'][:70]} \u00bb")
+        print("    Ne pas monter ce rush sur ce texte sans l'avoir ecoute.")
 
 if __name__ == "__main__":
     main()
