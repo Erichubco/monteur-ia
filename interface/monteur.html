@@ -2477,7 +2477,19 @@ requestAnimationFrame(tic);
 
 /* ------------------------------------------------------------ ecriture */
 async function enregistrer(silencieux){
-  BP.style_sous_titres = {...(BP.style_sous_titres || {}), ...ST};
+  /* On n'écrit QUE ce qui diffère du défaut du moteur. Le serveur envoie à la
+     page le style FUSIONNÉ, donc ST porte toujours les onze champs : les
+     recopier tels quels gelait dans le blueprint le défaut du JOUR, et tout
+     réglage ultérieur du moteur n'atteignait plus le film, en silence. C'est
+     ce qui a laissé cinq films sans contour. DEFAUT vient du même appel que
+     ST (ligne 1144) ; s'il est vide parce que l'appel a échoué, plus rien ne
+     diffère de rien et on retombe sur l'ancien comportement, jamais sur un
+     bloc vidé par erreur. Un champ que le moteur ne connaît pas est gardé. */
+  const ecarts = Object.fromEntries(
+    Object.entries({...(BP.style_sous_titres || {}), ...ST})
+          .filter(([k, v]) => DEFAUT[k] !== v));
+  if (Object.keys(ecarts).length) BP.style_sous_titres = ecarts;
+  else delete BP.style_sous_titres;
   const r = await fetch('/api/projet/' + encodeURIComponent(NOM),
     {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(BP)});
   if (!r.ok){ dire('L\'enregistrement a échoué.'); return }
