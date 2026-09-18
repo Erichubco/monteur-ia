@@ -154,9 +154,14 @@ def planche_contact(chemins, plans, sortie, colonnes=6, larg_vignette=220):
 
 # ---------------------------------------------------------------------- audio
 
-def analyser_audio(video, duree, pas=0.10):
-    """Enveloppe RMS + silences, calcules depuis le PCM brut.
-    On ne demande pas a ffmpeg de juger : on mesure et on juge ensuite."""
+# Le plancher de silence. UN SEUL auteur pour tout le fichier : l'enveloppe, les
+# silences et l'attaque se jugent au meme seuil, celui que `controler.py` reprend.
+PLANCHER_DBFS = -45.0
+
+
+def _enveloppe_dbfs(video, pas):
+    """Le PCM brut ramene a une enveloppe RMS, un point tous les `pas` secondes.
+    Rend None quand la piste est absente ou illisible."""
     import numpy as np
     r = subprocess.run(["ffmpeg", "-v", "error", "-i", str(video), "-vn",
                         "-ac", "1", "-ar", "16000", "-f", "s16le", "-"],
@@ -164,12 +169,39 @@ def analyser_audio(video, duree, pas=0.10):
     if not r.stdout:
         return None
     x = np.frombuffer(r.stdout, dtype="<i2").astype(np.float32) / 32768.0
-    sr, n = 16000, int(16000 * pas)
+    n = int(16000 * pas)
     blocs = x[: len(x) // n * n].reshape(-1, n)
     rms = np.sqrt((blocs ** 2).mean(axis=1) + 1e-12)
-    dbfs = 20 * np.log10(rms + 1e-12)
-    plancher = -45.0
-    actif = dbfs > plancher
+    return 20 * np.log10(rms + 1e-12)
+
+
+def attaque(video, pas=0.02):
+    """L'instant ou le son passe au-dessus du plancher de silence.
+
+    Whisper RABAT a 0,00 l'horodate du premier mot d'un rush qui ouvre sur un
+    silence. Mesure du 18/09/2026 sur treize rushes : il annoncait 0,00 la ou le
+    son attaque a 0,32, 0,42 et 0,46 s. Pris au mot, le plan s'ouvre sur du vide
+    et la coupe precedente tombe dans le trou.
+
+    `ffmpeg silencedetect` au meme -45 dB n'a vu aucune de ces attaques. La
+    mesure qui compte est celle que le controle utilise ensuite, donc la notre.
+    Rend None si la piste est muette ou illisible."""
+    dbfs = _enveloppe_dbfs(video, pas)
+    if dbfs is None:
+        return None
+    for i, v in enumerate(dbfs):
+        if v > PLANCHER_DBFS:
+            return round(i * pas, 3)
+    return None
+
+
+def analyser_audio(video, duree, pas=0.10):
+    """Enveloppe RMS + silences, calcules depuis le PCM brut.
+    On ne demande pas a ffmpeg de juger : on mesure et on juge ensuite."""
+    dbfs = _enveloppe_dbfs(video, pas)
+    if dbfs is None:
+        return None
+    actif = dbfs > PLANCHER_DBFS
     silences, i = [], 0
     while i < len(actif):
         if not actif[i]:
@@ -194,6 +226,12 @@ def analyser_audio(video, duree, pas=0.10):
 
 # ----------------------------------------------------------------- transcript
 
+# Au-dela de ce seuil, Whisper n'a pas rabattu son horodate : il a entendu.
+RABAT_MAXI = 0.05
+# Sous ce gain, redresser ne change rien ni a l'oeil ni a la coupe.
+REDRESSE_MINI = 0.05
+
+
 def transcrire(video, modele="small", langue="fr"):
     import whisper
     m = whisper.load_model(modele)
@@ -205,7 +243,19 @@ def transcrire(video, modele="small", langue="fr"):
             mots.append({"m": w["word"].strip(),
                          "d": round(float(w["start"]), 2),
                          "f": round(float(w["end"]), 2)})
-    return {"texte": (r.get("text") or "").strip(), "mots": mots}
+    # Le premier mot est le seul que Whisper rabat : les suivants sont dates
+    # sur de la parole. On le redresse sur l'attaque MESUREE, jamais au-dela
+    # de sa propre fin.
+    att = attaque(video) if mots else None
+    redresse = None
+    if (att is not None and mots[0]["d"] <= RABAT_MAXI
+            and att - mots[0]["d"] >= REDRESSE_MINI):
+        apres = round(min(att, mots[0]["f"] - 0.02), 2)
+        if apres > mots[0]["d"]:
+            redresse = {"avant": mots[0]["d"], "apres": apres}
+            mots[0]["d"] = apres
+    return {"texte": (r.get("text") or "").strip(), "mots": mots,
+            "attaque_s": att, "premier_mot_redresse": redresse}
 
 HALLUS = ["amara.org", "sous-titres realises par", "sous-titrage", "merci d'avoir regarde"]
 
@@ -288,6 +338,9 @@ def main():
             "n_mots": len(transcript["mots"]),
             "suspect_hallucination": est_halluciné(transcript["texte"]) if transcript["texte"] else None,
             "mots_par_seconde": round(len(transcript["mots"]) / conteneur["duree"], 2) if transcript["mots"] else 0,
+            # l'attaque MESUREE du rush, et le redressement s'il a eu lieu
+            "attaque_s": transcript.get("attaque_s"),
+            "premier_mot_redresse": transcript.get("premier_mot_redresse"),
         },
         "plans": plans,
         "planche_contact": str(planche) if planche else None,
